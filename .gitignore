@@ -1,0 +1,16 @@
+*.log
+*.m4
+*.o
+*.trs
+*_test
+.deps/
+Makefile
+Makefile.in
+auto*
+compile
+config.*
+configure
+depcomp
+install-sh
+missing
+test-driver
