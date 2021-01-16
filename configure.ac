@@ -21,6 +21,7 @@ AC_CHECK_HEADERS([security/pam_appl.h security/pam_ext.h security/pam_modules.h]
 # Checks for typedefs, structures, and compiler characteristics.
 
 # Checks for library functions.
+AC_CHECK_FUNCS([pam_syslog vsyslog])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
