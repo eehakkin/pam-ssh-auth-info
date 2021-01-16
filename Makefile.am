@@ -18,4 +18,5 @@ pam_ssh_auth_info_la_LDFLAGS	= $(AM_LDFLAGS) -avoid-version -module -shared
 pam_ssh_auth_info_la_LIBADD	= -lpam
 pam_ssh_auth_info_la_SOURCES	= \
 	pam_ssh_auth_info.c \
+	pam_syslog.h \
 	$(line_tokens_match_SOURCES)

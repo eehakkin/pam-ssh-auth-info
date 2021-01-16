@@ -24,6 +24,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include <syslog.h>
+
 #ifdef HAVE_SECURITY_PAM_APPL_H
 #	include <security/pam_appl.h>
 #endif
@@ -35,6 +37,7 @@
 #endif
 
 #include "line_tokens_match.h"
+#include "pam_syslog.h"
 
 /* Check if a string is in a list separated by separators.
  */
@@ -73,17 +76,28 @@ pam_sm_authenticate(
 	/* Parse options.
 	 */
 	bool any = false;
+	bool debug = false;
 	char const *disable = NULL;
 	char const *enable = NULL;
+	bool quiet_fail = false;
+	bool quiet_success = false;
 	for (; argc > 0; --argc, ++argv) {
 		if (strcmp(*argv, "all") == 0)
 			any = false;
 		else if (strcmp(*argv, "any") == 0)
 			any = true;
+		else if (strcmp(*argv, "debug") == 0)
+			debug = true;
 		else if (strncmp(*argv, "disable=", 8) == 0)
 			disable = *argv + 8;
 		else if (strncmp(*argv, "enable=", 7) == 0)
 			enable = *argv + 7;
+		else if (strcmp(*argv, "quiet") == 0)
+			quiet_fail = quiet_success = true;
+		else if (strcmp(*argv, "quiet_fail") == 0)
+			quiet_fail = true;
+		else if (strcmp(*argv, "quiet_success") == 0)
+			quiet_success = true;
 		else
 			break;
 	}
@@ -98,29 +112,95 @@ pam_sm_authenticate(
 			(void const **)&service
 			)) != PAM_SUCCESS)
 			return ret;
-		if (!service || !*service)
+		if (!service || !*service) {
+			if (debug)
+				pam_syslog(pamh, LOG_DEBUG, "no service");
 			return PAM_IGNORE;
-		if (disable && in_list(disable, ':', service))
+		}
+		if (disable && in_list(disable, ':', service)) {
+			if (debug)
+				pam_syslog(
+					pamh,
+					LOG_DEBUG,
+					"disabled"
+					" for service %s"
+					" due to disable=%s",
+					service,
+					disable
+					);
 			return PAM_IGNORE;
-		if (enable && !in_list(enable, ':', service))
+		}
+		if (enable && !in_list(enable, ':', service)) {
+			if (debug)
+				pam_syslog(
+					pamh,
+					LOG_DEBUG,
+					"not enabled"
+					" for service %s"
+					" due to enable=%s",
+					service,
+					enable
+					);
 			return PAM_IGNORE;
+		}
 	}
 	/* Retrieve SSH authentication information.
 	 */
 	char const* ssh_auth_info = pam_getenv(pamh, "SSH_AUTH_INFO_0");
-	if (!ssh_auth_info || !*ssh_auth_info)
+	if (!ssh_auth_info || !*ssh_auth_info) {
+		if (debug)
+			pam_syslog(
+				pamh,
+				LOG_DEBUG,
+				!ssh_auth_info ? "no %s" : "empty %s",
+				"SSH_AUTH_INFO_0"
+				);
 		return PAM_IGNORE;
+	}
 	/* Process SSH authentication information patterns.
 	 */
 	bool matches = !any;
 	for (; argc > 0; --argc, ++argv) {
 		for (char const *s = ssh_auth_info; *s; s = next_line(s)) {
 			matches = initial_first_line_tokens_match(s, *argv);
+			if (debug)
+				pam_syslog(
+					pamh,
+					LOG_DEBUG,
+					"ssh auth info"
+					" line \"%.*s\""
+					" %s"
+					" pattern \"%s\"",
+					(int)strcspn(s, "\n"),
+					s,
+					matches ? "matches" : "does not match",
+					*argv
+					);
 			if (matches)
 				break;
 		}
 		if (matches == any)
 			break;
+	}
+	if (!(matches ? quiet_success : quiet_fail)) {
+		char const *user = NULL;
+		if (pam_get_item(
+			pamh,
+			PAM_USER,
+			(void const **)&user
+			) != PAM_SUCCESS || user == NULL)
+			user = "(unknown)";
+		pam_syslog(
+			pamh,
+			LOG_INFO,
+			"ssh auth info %s%s%s%s %s by user %s",
+			argc ? "pattern requirement" : "pattern requirements",
+			argc ? " \"" : "",
+			argc ? *argv : "",
+			argc ? "\""  : "",
+			matches ? "met" : "not met",
+			user
+			);
 	}
 	return matches ? PAM_SUCCESS : PAM_AUTH_ERR;
 }
