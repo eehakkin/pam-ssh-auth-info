@@ -1,0 +1,42 @@
+#main_content h1 + p/*:has(a[href^="#heading"])*/ {
+	background:	#ddd;
+	border:		#bbb solid 1px;
+	line-height:	normal;
+	min-width:	min-content;
+	padding:	1em;
+}
+#main_content h1 + p/*:has(a[href^="#heading"])*/ a[href^="#heading"] {
+	display:	list-item;
+	margin:		0 0 0 1em;
+}
+#main_content h1 + p/*:has(a[href^="#heading"])*/ br {
+	display:	none;
+}
+#main_content hr {
+	display:	none;
+}
+@media all and (min-width: 320px) {
+	#main_content h1 + p/*:has(a[href^="#heading"])*/ {
+		box-shadow:	0 0 0 1em #f2f2f2;
+		float:		right;
+		margin:		0 0 1em 1em;
+	}
+	#main_content h1 + p/*:has(a[href^="#heading"])*/ a[href^="#heading"] {
+		min-width:	5em;
+		width:		min-content;
+	}
+}
+#main_content b     { font-weight: bolder; }
+#main_content h1    { text-align: center }
+#main_content p     { margin-top: 0; margin-bottom: 0; vertical-align: top }
+#main_content pre   { margin-top: 0; margin-bottom: 0; vertical-align: top }
+#main_content table { margin-top: 0; margin-bottom: 0; vertical-align: top }
+#main_content table,
+#main_content table tbody,
+#main_content table tr,
+#main_content table tr th,
+#main_content table tr td {
+	border:		none;
+	margin:		0;
+	padding:	0;
+}
