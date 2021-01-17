@@ -1,0 +1,13 @@
+#main_content p       { margin-top: 0; margin-bottom: 0; vertical-align: top }
+#main_content pre     { margin-top: 0; margin-bottom: 0; vertical-align: top }
+#main_content table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
+#main_content h1      { text-align: center }
+#main_content table,
+#main_content table tbody,
+#main_content table tr,
+#main_content table tr th,
+#main_content table tr td {
+	border:		none;
+	margin:		0;
+	padding:	0;
+}
