@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta name="generator" content="groff -Txhtml, see www.gnu.org"/>
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII"/>
+<meta name="Content-Style" content="text/css"/>
+<style type="text/css">
+       .center { text-align: center }
+       .right  { text-align: right }
+       p       { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       pre     { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       h1      { text-align: center }
+</style>
+<title>pam_ssh_auth_info</title>
+
+ <link href="groff.css" rel="stylesheet" type="text/css" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+
+<h1>pam_ssh_auth_info</h1>
+
+<p><a href="#heading1">NAME</a><br/>
+<a href="#heading2">SYNOPSIS</a><br/>
+<a href="#heading3">DESCRIPTION</a><br/>
+<a href="#heading4">OPTIONS</a><br/>
+<a href="#heading5">MODULE TYPES PROVIDED</a><br/>
+<a href="#heading6">RETURN VALUES</a><br/>
+<a href="#heading7">EXAMPLES</a><br/>
+<a href="#heading8">ENVIRONMENT</a><br/>
+<a href="#heading9">NOTES</a><br/>
+<a href="#heading10">SEE ALSO</a><br/>
+<a href="#heading11">AUTHOR</a><br/>
+<a href="#heading12">COPYRIGHT</a><br/>
+
+</p>
+<hr/>
+
+
+<h2 id="heading1">NAME
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em">pam_ssh_auth_info
+- test SSH authentication information</p>
+
+<h2 id="heading2">SYNOPSIS
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>pam_ssh_auth_info.so</b>
+[<i>flag</i>...] [<i>pattern</i>[=<i>pattern</i>]...]...</p>
+
+<h2 id="heading3">DESCRIPTION
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">The
+pam_ssh_auth_info.so PAM module is designed to succeed or
+fail authentication based on SSH authentication information
+consisting of a list of successfully completed
+authentication methods and public credentials (e.g. keys)
+used to authenticate the user. One use is to select whether
+to load other modules based on this test.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Normally, the
+module should be given zero or more patterns as module
+arguments, and authentication will succeed if SSH
+authentication information matches all of the patterns (or
+any of or none of the patterns depending on the options). If
+there are no previous successfully completed authentication
+methods, SSH authentication information is not available but
+missing and authentication will neither succeed nor fail
+(the module will return <b>PAM_IGNORE</b>).</p>
+
+<h2 id="heading4">OPTIONS
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">The following
+<i>flag</i>s are supported:</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<colgroup><col width="11%" />
+<col width="9%" />
+<col width="2%" class="center" />
+<col width="78%" />
+</colgroup>
+<tr valign="top" align="left">
+<td></td>
+<td>
+
+
+<p><b>all_of</b></p></td>
+<td></td>
+<td>
+
+
+<p>All of the <i>pattern</i>s must match. If zero
+<i>pattern</i>s are given as module arguments,
+authentication will succeed if SSH authentication
+information is available. This is the default.</p></td></tr>
+<tr valign="top" align="left">
+<td></td>
+<td>
+
+
+<p><b>any_of</b></p></td>
+<td></td>
+<td>
+
+
+<p>At least one of the <i>pattern</i>s must match. If zero
+<i>pattern</i>s are given as module arguments,
+authentication will fail if SSH authentication information
+is available.</p></td></tr>
+<tr valign="top" align="left">
+<td></td>
+<td>
+
+
+<p><b>debug</b></p></td>
+<td></td>
+<td>
+
+
+<p>Log debugging messages to syslog.</p></td></tr>
+</table>
+
+
+<p style="margin-left:11%;"><b>disable=</b><i>service</i>[<b>:</b><i>service</i>[...]]</p>
+
+<p style="margin-left:22%;">Disable pattern matching for
+the services listed in the colon separator service list.</p>
+
+
+<p style="margin-left:11%;"><b>enable=</b><i>service</i>[<b>:</b><i>service</i>[...]]</p>
+
+<p style="margin-left:22%;">Enable pattern matching only
+for the services listed in the colon separator service
+list.</p>
+
+<p style="margin-left:11%;"><b>none_of</b></p>
+
+<p style="margin-left:22%;">None of the <i>pattern</i>s may
+match. If zero <i>pattern</i>s are given as module
+arguments, authentication will succeed if SSH authentication
+information is available.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<colgroup><col width="11%" />
+<col width="7%" />
+<col width="4%" class="center" />
+<col width="75%" />
+<col width="3%" />
+</colgroup>
+<tr valign="top" align="left">
+<td></td>
+<td>
+
+
+<p><b>quiet</b></p></td>
+<td></td>
+<td>
+
+
+<p>Do not log failure or success messages to syslog.</p></td>
+<td>
+</td></tr>
+</table>
+
+<p style="margin-left:11%;"><b>quiet_fail</b></p>
+
+<p style="margin-left:22%;">Do not log failure messages to
+syslog.</p>
+
+<p style="margin-left:11%;"><b>quiet_success</b></p>
+
+<p style="margin-left:22%;">Do not log success messages to
+syslog.</p>
+
+
+<p style="margin-left:11%;"><b>recursion_limit=</b><i>limit</i></p>
+
+<p style="margin-left:22%;">Change the recursion limit.
+This affects extended patterns and <b>*</b> wildcard
+patterns.</p>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>PATTERNS</b>
+<br/>
+Any character byte that appears in a pattern, other than the
+extended patterns and the special pattern characters
+described below, matches itself.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The special
+pattern characters have the following meanings:</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<colgroup><col width="11%" />
+<col width="1%" />
+<col width="10%" class="center" />
+<col width="78%" />
+</colgroup>
+<tr valign="top" align="left">
+<td></td>
+<td>
+
+
+<p><b>*</b></p></td>
+<td></td>
+<td>
+
+
+<p>Matches any number of (including zero) word character
+bytes but not a word separator (space).</p></td></tr>
+<tr valign="top" align="left">
+<td></td>
+<td>
+
+
+<p><b>=</b></p></td>
+<td></td>
+<td>
+
+
+<p>Matches an equal-sign (<b>=</b>) or a word separator
+(space). This enables more natural looking patterns and
+allows patterns to be written without spaces avoiding the
+need for square bracket quoting in PAM configuration
+files.</p> </td></tr>
+<tr valign="top" align="left">
+<td></td>
+<td>
+
+
+<p><b>?</b></p></td>
+<td></td>
+<td>
+
+
+<p>Matches any word character byte but not a word separator
+(space).</p> </td></tr>
+<tr valign="top" align="left">
+<td></td>
+<td>
+
+
+<p><b>[</b></p></td>
+<td></td>
+<td>
+
+
+<p>A pair of brackets introduces a character byte class. A
+character byte class (<b>[</b>...<b>]</b>) matches any word
+character byte in the class. A complemented character byte
+class (<b>[!</b>...<b>]</b>) matches any word character byte
+not in the class. Neither matches a word separator (space).
+A class may contain character bytes (<b>[abcde]</b>) and
+character byte ranges (<b>[a-e]</b>).</p></td></tr>
+<tr valign="top" align="left">
+<td></td>
+<td>
+
+
+<p><b>\</b></p></td>
+<td></td>
+<td>
+
+
+<p>Preserves the literal meaning of the following character
+byte.</p> </td></tr>
+</table>
+
+<p style="margin-left:11%; margin-top: 1em">The extended
+patterns have the following meanings: <b><br/>
+
+?(</b><i>pattern</i><b>|</b><i>pattern</i><b>|</b>...<b>)</b></p>
+
+<p style="margin-left:22%;">Matches zero or one occurence
+of the given patterns within a word. Does not match a word
+separator (space).</p>
+
+
+<p style="margin-left:11%;"><b>*(</b><i>pattern</i><b>|</b><i>pattern</i><b>|</b>...<b>)</b></p>
+
+<p style="margin-left:22%;">Matches zero or more occurences
+of the given patterns within a word. Does not match a word
+separator (space).</p>
+
+
+<p style="margin-left:11%;"><b>@(</b><i>pattern</i><b>|</b><i>pattern</i><b>|</b>...<b>)</b></p>
+
+<p style="margin-left:22%;">Matches one occurence of the
+given patterns within a word. Does not match a word
+separator (space).</p>
+
+
+<p style="margin-left:11%;"><b>+(</b><i>pattern</i><b>|</b><i>pattern</i><b>|</b>...<b>)</b></p>
+
+<p style="margin-left:22%;">Matches one or more occurences
+of the given patterns within a word. Does not match a word
+separator (space).</p>
+
+
+<p style="margin-left:11%;"><b>!(</b><i>pattern</i><b>|</b><i>pattern</i><b>|</b>...<b>)</b></p>
+
+<p style="margin-left:22%;">Matches anything within a word
+except one occurence of the given patterns. Does not match a
+word separator (space).</p>
+
+<p style="margin-left:11%; margin-top: 1em">SSH
+authentication information consists of lines having a format
+like</p>
+
+
+<p style="margin-left:22%; margin-top: 1em"><i>method</i>[<b>/</b><i>submethod</i>][
+<i>key-type key-data</i>][ <i>info-word</i>]...</p>
+
+<p style="margin-left:11%; margin-top: 1em">SSH
+authentication information matches a pattern if on any such
+line all the words or the initial words match the
+pattern.</p>
+
+<h2 id="heading5">MODULE TYPES PROVIDED
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">All module
+types (<b>account</b>, <b>auth</b>, <b>password</b> and
+<b>session</b>) are provided. That being said, the
+<b>auth</b> type is still undoubtedly the most useful
+one.</p>
+
+<h2 id="heading6">RETURN VALUES
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>PAM_AUTH_ERR</b></p>
+
+<p style="margin-left:22%;">Pattern requirements are not
+met. SSH authentication information does not match all of or
+any of the patterns (see the <b>all_of</b> and the
+<b>any_of</b> options) or matches some of the patterns (see
+the <b>none_of</b> option).</p>
+
+<p style="margin-left:11%;"><b>PAM_IGNORE</b></p>
+
+<p style="margin-left:22%;">The pattern matching is
+disabled for the service (see the <b>disable</b> option) or
+not enabled for the service (see the <b>enable</b> option)
+or SSH authentication information is missing.</p>
+
+<p style="margin-left:11%;"><b>PAM_SUCCESS</b></p>
+
+<p style="margin-left:22%;">Pattern requirements are met.
+SSH authentication information matches all of or any of the
+patterns (see the <b>all_of</b> and the <b>any_of</b>
+options) or matches none of the patterns (see the
+<b>none_of</b> option).</p>
+
+<h2 id="heading7">EXAMPLES
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Always load an
+OATH module rule (to request and check a one-time password)
+but load a password module rule (to request and check the
+user password) only if there are no previous successfully
+completed authentications (in which case SSH authentication
+information is missing):</p>
+
+<pre style="margin-left:22%; margin-top: 1em"><!--
+-->auth  requisite         oath-module.so option...
+auth  [success=1        \
+       default=ignore]  pam_ssh_auth_info.so
+auth  required          password-module.so try_first_pass option...</pre>
+
+
+<p style="margin-left:11%; margin-top: 1em">Load an OATH
+module rule (to request and check a one-time password) only
+if there are no previous successfully completed FIDO
+authenticator algorithm based public key authentications (in
+which case SSH authentication information either is missing
+or does not match the pattern) but always load a password
+module rule (to request and check the user password):</p>
+
+<pre style="margin-left:22%; margin-top: 1em"><!--
+-->auth  [success=1        \
+       ignore=ignore    \
+       auth_err=ignore  \
+       default=die]     pam_ssh_auth_info.so quiet \
+                            publickey=*sk-*@openssh.com
+auth  requisite         oath-module.so option...
+auth  required          password-module.so try_first_pass option...</pre>
+
+
+<p style="margin-left:11%; margin-top: 1em">Require that
+there is at least one previous successfully completed FIDO
+authenticator algorithm based public key authentication (in
+which case the key type contains &ldquo;sk-&rdquo; and ends
+with &ldquo;@openssh.com&rdquo;). If multiple public key
+authentications are required, only one of them is required
+to be a FIDO authenticator algorithm based one.</p>
+
+<pre style="margin-left:22%; margin-top: 1em"><!--
+-->auth  requisite  pam_ssh_auth_info.so quiet \
+                     publickey=*sk-*@openssh.com</pre>
+
+
+<p style="margin-left:11%; margin-top: 1em">Require that
+there is at least one previous successfully completed FIDO
+authenticator algorithm based public key authentication (in
+which case the key type contains &ldquo;sk-&rdquo; and ends
+with &ldquo;@openssh.com&rdquo;) and at least one previous
+successfully completed non-FIDO public key authentication
+(in which case the key type does not contain
+&ldquo;sk-&rdquo; or does not end with
+&ldquo;@openssh.com&rdquo;).</p>
+
+<pre style="margin-left:22%; margin-top: 1em"><!--
+-->auth  requisite  pam_ssh_auth_info.so quiet \
+                     publickey=*sk-*@openssh.com \
+                     publickey=!(*sk-*@openssh.com)</pre>
+
+
+<h2 id="heading8">ENVIRONMENT
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>SSH_AUTH_INFO_0</b></p>
+
+<p style="margin-left:22%;">SSH authentication information
+consisting of a list of successfully completed
+authentication methods and public credentials (e.g. keys)
+used to authenticate the user. This environment variable is
+provided by OpenSSH server since version 7.6p1 and is
+visible to PAM auth modules (beginning with OpenSSH version
+7.8p1 if keyboard-interactive challenge-response
+authentication is used and beginning with OpenSSH version
+9.8p1 if password authentication is used) and to PAM
+account, session and password modules (beginning with
+OpenSSH version 7.6p1) but not to user sessions.</p>
+
+<p style="margin-left:11%;"><b>SSH_USER_AUTH</b></p>
+
+<p style="margin-left:22%;">A location of a file containing
+SSH authentication information consisting of a list of
+successfully completed authentication methods and public
+credentials (e.g. keys) used to authenticate the user. This
+environment variable is provided by OpenSSH server since
+version 7.6p1 if the <b>ExposeAuthInfo</b> server option is
+enabled and is visible to user sessions but not to PAM
+modules. This may be a useful source for creating proper
+patterns.</p>
+
+<h2 id="heading9">NOTES
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">SSH
+authentication information is available to PAM auth modules
+beginning with OpenSSH version 7.8p1 if keyboard-interactive
+challenge-response authentication is used and beginning with
+OpenSSH version 9.8p1 if password authentication is used.
+SSH authentication information is available to PAM account,
+session and password modules beginning with OpenSSH version
+7.6p1.</p>
+
+<p style="margin-left:11%; margin-top: 1em">In order to
+make this module useful, the following <b>sshd_config</b>(5)
+options should be set (either explicitly or via defaults):
+<b><br/>
+AuthenticationMethods</b></p>
+
+<p style="margin-left:22%;">Should contain comma-separated
+lists of authentication method names with
+<b>keyboard-interactive</b>, <b>keyboard-interactive:pam</b>
+or <b>password</b> as the last list items so that there are
+successfully completed authentication methods and public
+credentials (e.g. keys) during the PAM authentication. For
+example</p>
+
+<pre style="margin-left:32%; margin-top: 1em"><!--
+--><b>AuthenticationMethods publickey,keyboard-interactive</b></pre>
+
+
+<p style="margin-left:22%; margin-top: 1em">for mandatory
+public key authentication and mandatory PAM authentication
+using keyboard-interactive challenge-response authentication
+or</p>
+
+<pre style="margin-left:32%; margin-top: 1em"><!--
+--><b>AuthenticationMethods publickey,keyboard-interactive keyboard-interactive</b></pre>
+
+
+<p style="margin-left:22%; margin-top: 1em">for optional
+public key authentication and mandatory PAM authentication
+using keyboard-interactive challenge-response
+authentication.</p>
+
+
+<p style="margin-left:11%;"><b>ChallengeResponseAuthentication</b>,
+<b>KbdInteractiveAuthentication</b>, <b><br/>
+PasswordAuthentication</b>, etc.</p>
+
+<p style="margin-left:22%;">The relevant ones should be set
+to <b>yes</b>.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<colgroup><col width="11%" />
+<col width="9%" />
+<col width="2%" class="center" />
+<col width="32%" />
+<col width="46%" />
+</colgroup>
+<tr valign="top" align="left">
+<td></td>
+<td>
+
+
+<p><b>UsePAM</b></p></td>
+<td></td>
+<td>
+
+
+<p>Should be set to <b>yes</b>.</p></td>
+<td>
+</td></tr>
+</table>
+
+<h2 id="heading10">SEE ALSO
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>pam</b>(7),
+<b>sshd_config</b>(5) <br/>
+
+<a href="https://github.Eero.xn--Hkkinen-5wa.fi/pam-ssh-auth-info/">Home
+page for pam_ssh_auth_info</a></p>
+
+<h2 id="heading11">AUTHOR
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Eero
+H&auml;kkinen
+&lt;Eero+pam-ssh-auth-info@H&auml;kkinen.fi&gt;</p>
+
+<h2 id="heading12">COPYRIGHT
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Copyright
+&copy; 2021 - 2025 Eero H&auml;kkinen
+&lt;Eero+pam-ssh-auth-info@H&auml;kkinen.fi&gt;</p>
+
+<p style="margin-left:11%; margin-top: 1em">This manual
+page is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as
+published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+
+<p style="margin-left:11%; margin-top: 1em">This manual
+page is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.</p>
+
+<p style="margin-left:11%; margin-top: 1em">You should have
+received a copy of the GNU General Public License along with
+this manual page. If not, see
+&lt;http://www.gnu.org/licenses/&gt;.</p>
+<hr/>
+</body>
+</html>

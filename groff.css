@@ -1,0 +1,60 @@
+html {
+	background:	#aca;
+	padding:	0;
+}
+body {
+	background:	#fff;
+	border:		#ddd solid 1px;
+	box-shadow:	1em 1em 0.5em rgba(0, 0, 0, 0.5);
+	color:		#000;
+	margin:		0 auto;
+	max-width:	50em;
+	padding:	0 1em 1em 1em;
+}
+h1 + p/*:has(a[href^="#heading"])*/ {
+	background:	#ddd;
+	border:		#bbb solid 1px;
+	box-shadow:	1em 1em 0.5em rgba(0, 0, 0, 0.5);
+	margin:		0 1em 2em 0;
+	min-width:	min-content;
+	padding:	1em;
+}
+h1 + p/*:has(a[href^="#heading"])*/ a[href^="#heading"] {
+	display:	list-item;
+	margin:		0 0 0 1em;
+}
+h1 + p/*:has(a[href^="#heading"])*/ br {
+	display:	none;
+}
+hr {
+	display:	none;
+}
+pre {
+	background:	#eee;
+	box-shadow:	0 0 0.5em #ccc;
+	overflow:	auto;
+	padding:	0.5em;
+}
+@media all and (min-width: 27em) { /*1+2*(1+1+1+7.5+1+1)+1*/
+	h1 + p/*:has(a[href^="#heading"])*/ {
+		float:		right;
+		margin:		0 1em 2em 1em;
+	}
+	h1 + p/*:has(a[href^="#heading"])*/ a[href^="#heading"] {
+		min-width:	5em;
+		width:		min-content;
+	}
+}
+@media all and (min-width: 52em) {
+	body {
+		margin:		1em auto 2em 0;
+	}
+}
+@media all and (min-width: 53em) {
+	html {
+		padding:	0 1em 0 0;
+	}
+	body {
+		margin:		1em auto 2em auto;
+	}
+}
