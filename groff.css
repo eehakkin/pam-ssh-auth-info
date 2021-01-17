@@ -1,0 +1,22 @@
+html {
+	background:	#aca;
+	padding:	0;
+}
+body {
+	background:	#fff;
+	border:		#ccc solid 1px;
+	color:		#000;
+	margin:		0 auto;
+	max-width:	50em;
+	padding:	0 1em;
+}
+@media all and (min-width: 52em) {
+	html {
+		background:	#aca;
+		padding:	0 2em 0 1em;
+	}
+	body {
+		box-shadow:	1em 1em 0.5em rgba(0, 0, 0, 0.5);
+		margin:		1em auto 2em auto;
+	}
+}
