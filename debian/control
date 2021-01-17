@@ -1,0 +1,18 @@
+Source: pam-ssh-auth-info
+Build-Depends:
+	debhelper-compat (= 12)
+Maintainer: Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>
+Priority: optional
+Section: admin
+Standards-Version: 4.3.0
+
+Package: libpam-ssh-auth-info
+Architecture: any
+Depends:
+	${misc:Depends},
+	${shlibs:Depends}
+Description: SSH authentication information PAM module
+ This package provides a Pluggable Authentication Module that is
+ designed to succeed or fail authentication based on SSH authentication
+ information. One use is to select whether to load other modules based
+ on this test.
