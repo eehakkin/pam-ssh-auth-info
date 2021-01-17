@@ -1,0 +1,169 @@
+\" Copyright © 2021 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+\"
+\" This program is free software: you can redistribute it and/or modify
+\" it under the terms of the GNU General Public License version 3
+\" as published by the Free Software Foundation.
+\"
+\" This program is distributed in the hope that it will be useful,
+\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\" GNU General Public License for more details.
+\"
+\" You should have received a copy of the GNU General Public License
+\" along with this program.  If not, see <http://www.gnu.org/licenses/>.
+.if '\*[.T]'html' \{\
+.HEAD "<link href=""groff.css"" rel=""stylesheet"" type=""text/css"" />"
+.HEAD "<meta name=""viewport"" content=""width=device-width, initial-scale=1.0"" />"
+.HX 0
+.\}
+
+.TH "pam_ssh_auth_info" "8" "2021-01-07"
+
+.SH "NAME"
+pam_ssh_auth_info \- test SSH authentication information
+
+.SH "SYNOPSIS"
+.B  pam_ssh_auth_info.so
+.RI [ flag ...]
+.RI [ pattern [= pattern ]...]
+
+.SH "DESCRIPTION"
+The pam_ssh_auth_info.so PAM module is designed
+to succeed or fail authentication
+based on SSH authentication information.
+One use is to select whether to load other modules based on this test.
+
+The module should be given one or more patterns as module arguments, and
+authentication will succeed
+if SSH authentication information matches all of the patterns
+(or any of the patterns depending on the options).
+
+.SH "OPTIONS"
+.PP
+The following \fIflag\fRs are supported:
+.TP
+.B all
+All \fIpattern\fRs must match.
+This is the default.
+.TP
+.B any
+At least one \fIpattern\fR must match.
+.TP
+.B debug
+Log debugging messages to syslog.
+.TP
+.IR \fBdisable = service [: service [...]]
+Disable pattern matching for the services
+listed in the colon separator service list.
+.TP
+.IR \fBenable = service [: service [...]]
+Enable pattern matching only for the services
+listed in the colon separator service list.
+.TP
+.B quiet
+Do not log failure or success messages to syslog.
+.TP
+.B quiet_fail
+Do not log failure messages to syslog.
+.TP
+.B quiet_success
+Do not log success messages to syslog.
+
+.SS "PATTERNS"
+.PP
+Any character byte that appears in a pattern,
+other than the special pattern characters described below,
+matches itself.
+.PP
+The special pattern characters have the following meanings:
+.TP
+.B *
+Matches any number of (including zero) word character bytes
+but not a word separator (space).
+.TP
+.B =
+Matches equal-sign (\fB=\fR) or a word separator (space).
+.IP
+This
+enables more natural looking patterns and
+allows patterns to be written without spaces
+avoiding the need for square bracket quoting in PAM configuration files.
+.TP
+.B ?
+Matches any word character byte
+but not a word separator (space).
+.PP
+SSH authentication information consists of lines having a format like
+.IP
+.IR method "[/" submethod "] [" key-type " " key-data "] [" info-word "]..."
+.PP
+SSH authentication information matches a pattern
+if on any such line all the words or the initial words
+match the pattern.
+
+.SH "MODULE SERVICES PROVIDED"
+.PP
+Only the \fBauth\fR module type is provided.
+
+.SH "RETURN VALUES"
+.TP
+.B PAM_AUTH_ERR
+SSH authentication information does not match the patterns.
+.TP
+.B PAM_IGNORE
+The pattern matching is
+disabled for the service (see the \fBdisable\fR option) or
+not enabled for the service (see the \fBenable\fR option) or
+SSH authentication information is missing.
+.TP
+.B PAM_SUCCESS
+SSH authentication information matches the patterns.
+
+.SH EXAMPLES
+.PP
+Always load an OATH module rule
+(to request and check a one-time password)
+but load a password module rule
+(to request and check the user password)
+only
+if there are
+no previous successful authentications
+(in which case SSH authentication information is missing):
+.IP
+.EX
+auth  requisite       oath-module.so option...
+auth  [success=1      \\
+       ignore=ignore  \\
+       default=bad]   pam_ssh_auth_info.so
+auth  required        password-module.so try_first_pas option...
+.EE
+.PP
+Load an OATH module rule
+(to request and check a one-time password)
+only
+if there are
+no previous successful FIDO authenticator algorithm based authentications
+(in which case SSH authentication information either
+is missing or
+does not match the pattern)
+but always load a password module rule
+(to request and check the user password):
+.IP
+.EX
+auth  [success=1        \\
+       ignore=ignore    \\
+       auth_err=ignore  \\
+       default=bad]     pam_ssh_auth_info.so quiet publickey=sk-*@openssh.com
+auth  requisite         oath-module.so option...
+auth  required          password-module.so try_first_pass option...
+.EE
+
+.SH "SEE ALSO"
+.BR pam (7)
+
+.UR https://github.Eero.xn--Hkkinen-5wa.fi/pam-ssh-auth-info/
+Home Page for pam_ssh_auth_info
+.UE
+
+.SH "AUTHOR"
+Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>

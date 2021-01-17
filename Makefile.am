@@ -6,6 +6,8 @@ TESTS		= $(check_PROGRAMS)
 
 check_PROGRAMS	= line_tokens_match_test
 
+dist_man8_MANS	= pam_ssh_auth_info.8
+
 pamdir		= $(libdir)/security
 pam_LTLIBRARIES	= pam_ssh_auth_info.la
 
