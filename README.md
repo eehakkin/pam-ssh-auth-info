@@ -1,6 +1,6 @@
 # PAM SSH Authentication Information Module
 
-The pam_ssh_auth_info.so PAM module is designed to succeed or fail authentication based on SSH authentication information.
+The pam_ssh_auth_info.so PAM module is designed to succeed or fail authentication based on SSH authentication information consisting of a list of completed authentication methods and public credentials (e.g. keys) used to authenticate the user.
 One use is to select whether to load other modules based on this test.
 
 ## Requirements

@@ -1,3 +1,9 @@
+pam-ssh-auth-info (1.0.20210121) unstable; urgency=low
+
+  * Described SSH authentication information.
+
+ -- Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>  Thu, 21 Jan 2021 21:27:05 +0200
+
 pam-ssh-auth-info (1.0.20210117) unstable; urgency=low
 
   * Initial release.

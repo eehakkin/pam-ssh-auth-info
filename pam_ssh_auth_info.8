@@ -30,7 +30,11 @@ pam_ssh_auth_info \- test SSH authentication information
 .SH "DESCRIPTION"
 The pam_ssh_auth_info.so PAM module is designed
 to succeed or fail authentication
-based on SSH authentication information.
+based on SSH authentication information
+consisting of a list of
+completed authentication methods and
+public credentials (e.g. keys)
+used to authenticate the user.
 One use is to select whether to load other modules based on this test.
 
 The module should be given one or more patterns as module arguments, and
@@ -157,6 +161,17 @@ auth  [success=1        \\
 auth  requisite         oath-module.so option...
 auth  required          password-module.so try_first_pass option...
 .EE
+
+.SH "ENVIRONMENT"
+.TP
+.B SSH_AUTH_INFO_0
+SSH authentication information
+consisting of a list of
+completed authentication methods and
+public credentials (e.g. keys)
+used to authenticate the user.
+This information is provided
+by OpenSSH server since version 7.8p1.
 
 .SH "SEE ALSO"
 .BR pam (7)
