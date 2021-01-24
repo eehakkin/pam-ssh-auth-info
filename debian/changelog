@@ -1,3 +1,9 @@
+pam-ssh-auth-info (1.0.20210124) unstable; urgency=medium
+
+  * Provided all module types.
+
+ -- Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>  Sun, 24 Jan 2021 23:42:00 +0200
+
 pam-ssh-auth-info (1.0.20210121) unstable; urgency=low
 
   * Described SSH authentication information.

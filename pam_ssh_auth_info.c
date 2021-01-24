@@ -218,3 +218,43 @@ pam_sm_setcred(
 	(void)argv;
 	return PAM_IGNORE;
 }
+
+int
+pam_sm_acct_mgmt(
+	pam_handle_t *pamh,
+	int flags,
+	int argc,
+	char const **argv
+	) {
+	return pam_sm_authenticate(pamh, flags, argc, argv);
+}
+
+int
+pam_sm_open_session(
+	pam_handle_t *pamh,
+	int flags,
+	int argc,
+	char const **argv
+	) {
+	return pam_sm_authenticate(pamh, flags, argc, argv);
+}
+
+int
+pam_sm_close_session(
+	pam_handle_t *pamh,
+	int flags,
+	int argc,
+	char const **argv
+	) {
+	return pam_sm_authenticate(pamh, flags, argc, argv);
+}
+
+int
+pam_sm_chauthtok(
+	pam_handle_t *pamh,
+	int flags,
+	int argc,
+	char const **argv
+	) {
+	return pam_sm_authenticate(pamh, flags, argc, argv);
+}
