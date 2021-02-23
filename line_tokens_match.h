@@ -33,6 +33,7 @@
  *     token character byte not in the class. Neither matches a token separator
  *     (space). A class may contain character bytes ([abcde]) and character
  *     byte ranges ([a-e]).
+ *  \  Preserves the literal meaning of the following character byte.
  */
 static bool
 initial_first_line_tokens_match(
@@ -44,6 +45,11 @@ initial_first_line_tokens_match(
 		case ' ':
 			/* A token separator must be matched explicitly.
 			 */
+			if (
+				prefix_pattern[0] == '\\' &&
+				prefix_pattern[1] == ' '
+				)
+				++prefix_pattern;
 			if (
 				prefix_pattern[0] == ' ' ||
 				prefix_pattern[0] == '='
@@ -151,6 +157,15 @@ initial_first_line_tokens_match(
 			prefix_pattern = end;
 			continue;
 		}
+		case '\\':
+			/* A backslash preserves the literal meaning of
+			 * the following character byte.
+			 */
+			assert(*lines != ' ');
+			assert(*lines != '\n');
+			assert(*lines);
+			++prefix_pattern;
+			break;
 		default:
 			break;
 		}

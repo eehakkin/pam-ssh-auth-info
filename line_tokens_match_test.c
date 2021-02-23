@@ -34,6 +34,7 @@ struct {
 	{"[abc]", {
 		{"[[]abc[]]", true},
 		{"[][]abc[][]", true},
+		{"\\[abc\\]", true},
 		{"[[][-a-z][-a-z-][a-z-][]]", true},
 		{"[[][!b-z][!ac-z][!abd-z][]]", true},
 		{"[![]abc[]]", false},
@@ -45,7 +46,9 @@ struct {
 	}},
 	{"\\", {
 		{"[\\]", true},
+		{"\\\\", true},
 		{"[!\\]", false},
+		{"\\", false},
 		{NULL}
 	}},
 	{"", {
