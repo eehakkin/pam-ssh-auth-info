@@ -31,6 +31,23 @@ struct {
 } test_data[] = {
 	/* The first line is empty.
 	 */
+	{"[abc]", {
+		{"[[]abc[]]", true},
+		{"[][]abc[][]", true},
+		{"[[][-a-z][-a-z-][a-z-][]]", true},
+		{"[[][!b-z][!ac-z][!abd-z][]]", true},
+		{"[![]abc[]]", false},
+		{"[[][!a]bc[]]", false},
+		{"[[]a[!a-z]c[]]", false},
+		{"[[]ab[!ab-yz][]]", false},
+		{"[[]abc[!]]", false},
+		{NULL}
+	}},
+	{"\\", {
+		{"[\\]", true},
+		{"[!\\]", false},
+		{NULL}
+	}},
 	{"", {
 		{"", true},
 		{"*", true},

@@ -27,18 +27,27 @@
  *     a token separator (space).
  *  =  Matches equal-sign (=) or a token separator (space).
  *  ?  Matches any token character byte but not a token separator (space).
+ *  [  A pair of brackets introduces a character byte class.
+ *     A character byte class ([...]) matches any token character byte in
+ *     the class. A complemented character byte class ([!...]) matches any
+ *     token character byte not in the class. Neither matches a token separator
+ *     (space). A class may contain character bytes ([abcde]) and character
+ *     byte ranges ([a-e]).
  */
 static bool
 initial_first_line_tokens_match(
 	char const *lines,
 	char const *prefix_pattern
 	) {
-	for (; *prefix_pattern; ++lines, ++prefix_pattern) {
+	for (; prefix_pattern[0]; ++lines, ++prefix_pattern) {
 		switch (*lines) {
 		case ' ':
 			/* A token separator must be matched explicitly.
 			 */
-			if (*prefix_pattern == ' ' || *prefix_pattern == '=')
+			if (
+				prefix_pattern[0] == ' ' ||
+				prefix_pattern[0] == '='
+				)
 				continue;
 			/* Fall through. */
 		case '\n':
@@ -50,11 +59,11 @@ initial_first_line_tokens_match(
 			 * asterisks.
 			 */
 			return (
-				!*prefix_pattern ||
+				!prefix_pattern[0] ||
 				!prefix_pattern[strspn(prefix_pattern, "*")]
 				);
 		}
-		switch (*prefix_pattern) {
+		switch (prefix_pattern[0]) {
 		case '*':
 			/* An asterisk matches any number of (including zero)
 			 * token character bytes but not a token separator
@@ -78,7 +87,7 @@ initial_first_line_tokens_match(
 
 			/* The end of a line but not the end of the pattern.
 			 */
-			assert(*prefix_pattern);
+			assert(prefix_pattern[0]);
 			return false;
 		case '?':
 			/* A question mark matches any token character byte but
@@ -87,11 +96,66 @@ initial_first_line_tokens_match(
 			assert(*lines != ' ');
 			assert(*lines != '\n');
 			assert(*lines);
-			break;
-		default:
-			if (*lines != *prefix_pattern)
+			continue;
+		case '[': {
+			bool const negation = prefix_pattern[1] == '!';
+			char const *const begin =
+				prefix_pattern + (negation ? 2 : 1);
+			char const *const end =
+				*begin ? strchr(begin + 1, ']') : NULL;
+			if (!end)
+				/* An opening bracket ([) without a matching
+				 * closing bracket (]) is not a character byte
+				 * class.
+				 */
+				break;
+			/* A character byte class ([...]) matches any token
+			 * character byte in the class.
+			 * A complemented character byte class ([!...]) matches
+			 * any token character byte not in the class.
+			 * Neither matches a token separator (space).
+			 */
+			assert(*lines != ' ');
+			assert(*lines != '\n');
+			assert(*lines);
+			prefix_pattern = begin;
+			do {
+				if (
+					prefix_pattern[1] == '-' &&
+					prefix_pattern + 2 < end
+					) {
+					/* A character byte range.
+					 */
+					if (
+						*lines >= prefix_pattern[0] &&
+						*lines <= prefix_pattern[2]
+						)
+						break;
+					prefix_pattern += 3;
+				}
+				else {
+					/* A character byte.
+					 */
+					if (*lines == prefix_pattern[0])
+						break;
+					++prefix_pattern;
+				}
+			} while (prefix_pattern < end);
+			assert(prefix_pattern <= end);
+			if (
+				negation
+					? prefix_pattern < end
+					: prefix_pattern >= end
+				)
 				return false;
+			prefix_pattern = end;
+			continue;
 		}
+		default:
+			break;
+		}
+		if (*lines != prefix_pattern[0])
+			return false;
 	}
 	/* The end of the pattern.
 	 * Accept at the end of a token and at the end of a line.

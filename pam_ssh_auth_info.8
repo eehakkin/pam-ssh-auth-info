@@ -96,6 +96,17 @@ avoiding the need for square bracket quoting in PAM configuration files.
 .B ?
 Matches any word character byte
 but not a word separator (space).
+.TP
+.B [
+A pair of brackets introduces a character byte class.
+A character byte class (\fB[\fR...\fB]\fR)
+matches any word character byte in the class.
+A complemented character byte class (\fB[!\fR...\fB]\fR)
+matches any word character byte not in the class.
+Neither matches a word separator (space).
+A class may contain
+character bytes (\fB[abcde]\fR) and
+character byte ranges (\fB[a-e]\fR).
 .PP
 SSH authentication information consists of lines having a format like
 .IP
@@ -150,7 +161,9 @@ Load an OATH module rule
 (to request and check a one-time password)
 only
 if there are
-no previous successful FIDO authenticator algorithm based authentications
+no previous successful
+FIDO authenticator algorithm based
+public key authentications
 (in which case SSH authentication information either
 is missing or
 does not match the pattern)
@@ -161,9 +174,49 @@ but always load a password module rule
 auth  [success=1        \\
        ignore=ignore    \\
        auth_err=ignore  \\
-       default=bad]     pam_ssh_auth_info.so quiet publickey=sk-*@openssh.com
+       default=bad]     pam_ssh_auth_info.so quiet \\
+                            publickey=*sk-*@openssh.com
 auth  requisite         oath-module.so option...
 auth  required          password-module.so try_first_pass option...
+.EE
+.PP
+Require that there is
+at least one previous successful
+FIDO authenticator algorithm based
+public key authentication
+(in which case
+the key type
+contains \(lqsk-\(rq and
+ends with \(lq@openssh.com\(rq) and
+at least one previous successful
+non-FIDO
+public key authentication
+(in which case
+the key type
+does not start with \(lqsk-\(rq nor with \(lqwebauthn-sk-\(rq thus
+the third key type character byte
+is neither \(oq-\(cq nor \(oqb\(cq).
+.IP
+.EX
+auth  requisite  pam_ssh_auth_info.so quiet \\
+                     publickey=*sk-*@openssh.com \\
+                     publickey=??[!-b]*
+.EE
+.PP
+Require that there is
+at least one previous successful
+FIDO authenticator algorithm based
+public key authentication
+(in which case
+the key type
+contains \(lqsk-\(rq and
+ends with \(lq@openssh.com\(rq).
+If multiple public key authentications are required,
+only one of them is required to be a FIDO authenticator algorithm based one.
+.IP
+.EX
+auth  requisite  pam_ssh_auth_info.so quiet \\
+                     publickey=*sk-*@openssh.com
 .EE
 
 .SH "ENVIRONMENT"
@@ -180,6 +233,7 @@ by OpenSSH server since version 7.8p1.
 .SH "SEE ALSO"
 .BR pam (7)
 
+.na
 .UR https://github.Eero.xn--Hkkinen-5wa.fi/pam-ssh-auth-info/
 Home Page for pam_ssh_auth_info
 .UE

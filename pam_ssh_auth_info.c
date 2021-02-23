@@ -61,7 +61,8 @@ in_list(char const *list, char sep, char const *s) {
 static char const *
 next_line(char const *s) {
 	s += strcspn(s, "\n");
-	s += *s == '\n' ? 1 : 0;
+	if (*s == '\n')
+		++s;
 	return s;
 }
 
