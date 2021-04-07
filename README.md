@@ -67,7 +67,7 @@ in **/etc/ssh/sshd_config** or such
 
 In order to enable this module,
 an appropriate file in the **/etc/pam.d/** directory
-(such as **/etc/pam.d/ssh**)
+(such as **/etc/pam.d/sshd**)
 must be modified
 to contain a line in form of
 
