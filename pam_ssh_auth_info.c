@@ -47,7 +47,7 @@
 static bool
 in_list(char const *list, char sep, char const *s) {
 	size_t const n = strlen(s);
-	for (char const *p = strstr(list, s); p; p = strstr(p + 1, s)) {
+	for (char const *p = strstr(list, s); p && *p; p = strstr(p + 1, s)) {
 		/* Check that the string is either the first item in the list
 		 * or is preceded by a separator and that the string is either
 		 * the last item in the list or is followed by a separator (so
