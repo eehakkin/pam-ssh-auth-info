@@ -3,6 +3,7 @@ pam-ssh-auth-info (1.0.20210430) unstable; urgency=low
   * Defined the remaining PAM_SM_ macros.
   * Fixed handling of empty service names.
   * Improved configuration documentation (closes: GH-1).
+  * Installed README.md to the doc directory.
 
  -- Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>  Fri, 30 Apr 2021 17:05:55 +0300
 
