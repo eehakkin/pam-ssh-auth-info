@@ -1,3 +1,9 @@
+pam-ssh-auth-info (1.0.20210430) unstable; urgency=low
+
+  * Defined the remaining PAM_SM_ macros.
+
+ -- Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>  Fri, 30 Apr 2021 17:05:55 +0300
+
 pam-ssh-auth-info (1.0.20210223) unstable; urgency=low
 
   * Added support for patterns containing character byte classes.
