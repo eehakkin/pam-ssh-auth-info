@@ -1,3 +1,9 @@
+pam-ssh-auth-info (1.0.20210520) unstable; urgency=low
+
+  * Fixed license boilerplates.
+
+ -- Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>  Thu, 20 May 2021 21:42:36 +0300
+
 pam-ssh-auth-info (1.0.20210430) unstable; urgency=low
 
   * Defined the remaining PAM_SM_ macros.
