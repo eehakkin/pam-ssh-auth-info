@@ -1,3 +1,5 @@
+[![Build CI](https://github.com/eehakkin/pam-ssh-auth-info/actions/workflows/build.yml/badge.svg)](https://github.com/eehakkin/pam-ssh-auth-info/actions/workflows/build.yml)
+
 # PAM SSH Authentication Information Module
 
 The pam_ssh_auth_info.so PAM module is designed to succeed or fail
