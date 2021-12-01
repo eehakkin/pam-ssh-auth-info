@@ -12,7 +12,8 @@ pamdir				= $(libdir)/security
 pam_LTLIBRARIES			= pam_ssh_auth_info.la
 
 line_tokens_match_SOURCES	= \
-	line_tokens_match.h
+	line_tokens_match.h \
+	pattern.h
 line_tokens_match_test_SOURCES	= \
 	line_tokens_match_test.c \
 	$(line_tokens_match_SOURCES)

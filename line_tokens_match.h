@@ -19,6 +19,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "pattern.h"
+
 /* Check if the initial tokens on the first line matches the pattern.
  *
  * The special pattern characters:
@@ -42,6 +44,7 @@ initial_line_tokens_match(
 	char const *prefix_pattern
 	) {
 	for (; prefix_pattern[0]; ++prefix_pattern) {
+		struct character_class_info character_class;
 		if (line < line_end && *line == ' ') {
 			/* A token separator must be matched explicitly.
 			 */
@@ -100,13 +103,11 @@ initial_line_tokens_match(
 			assert(*line != ' ');
 			++line;
 			continue;
-		case '[': {
-			bool const negation = prefix_pattern[1] == '!';
-			char const *const begin =
-				prefix_pattern + (negation ? 2 : 1);
-			char const *const end =
-				*begin ? strchr(begin + 1, ']') : NULL;
-			if (!end)
+		case '[':
+			if (!is_character_class(
+				prefix_pattern,
+				&character_class
+				))
 				/* An opening bracket ([) without a matching
 				 * closing bracket (]) is not a character byte
 				 * class.
@@ -120,11 +121,11 @@ initial_line_tokens_match(
 			 */
 			assert(line < line_end);
 			assert(*line != ' ');
-			prefix_pattern = begin;
+			prefix_pattern = character_class.begin;
 			do {
 				if (
 					prefix_pattern[1] == '-' &&
-					prefix_pattern + 2 < end
+					prefix_pattern[2] != ']'
 					) {
 					/* A character byte range.
 					 */
@@ -142,18 +143,17 @@ initial_line_tokens_match(
 						break;
 					++prefix_pattern;
 				}
-			} while (prefix_pattern < end);
-			assert(prefix_pattern <= end);
+			} while (prefix_pattern < character_class.end);
+			assert(prefix_pattern <= character_class.end);
 			if (
-				negation
-					? prefix_pattern < end
-					: prefix_pattern >= end
+				character_class.negation
+					? prefix_pattern < character_class.end
+					: prefix_pattern >= character_class.end
 				)
 				return false;
-			prefix_pattern = end;
+			prefix_pattern = character_class.end;
 			++line;
 			continue;
-		}
 		case '\\':
 			/* A backslash preserves the literal meaning of
 			 * the following character byte.
