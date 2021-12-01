@@ -36,13 +36,13 @@
  *  \  Preserves the literal meaning of the following character byte.
  */
 static bool
-initial_first_line_tokens_match(
-	char const *lines,
+initial_line_tokens_match(
+	char const *line,
+	char const *line_end,
 	char const *prefix_pattern
 	) {
-	for (; prefix_pattern[0]; ++lines, ++prefix_pattern) {
-		switch (*lines) {
-		case ' ':
+	for (; prefix_pattern[0]; ++prefix_pattern) {
+		if (line < line_end && *line == ' ') {
 			/* A token separator must be matched explicitly.
 			 */
 			if (
@@ -53,55 +53,52 @@ initial_first_line_tokens_match(
 			if (
 				prefix_pattern[0] == ' ' ||
 				prefix_pattern[0] == '='
-				)
+				) {
+				++line;
 				continue;
-			/* Fall through. */
-		case '\n':
-		case '\0':
-			/* The end of a line or the end of a token without
-			 * explicitly matched token separator.
-			 * This is the end of the initial tokens thus accept
-			 * an empty pattern and patterns consisting only
-			 * asterisks.
+			}
+			/* The end of a token without an explicitly matched
+			 * token separator is the end of the initial tokens.
 			 */
-			return (
-				!prefix_pattern[0] ||
-				!prefix_pattern[strspn(prefix_pattern, "*")]
-				);
+			line_end = line;
 		}
-		switch (prefix_pattern[0]) {
-		case '*':
+		if (prefix_pattern[0] == '*') {
 			/* An asterisk matches any number of (including zero)
 			 * token character bytes but not a token separator
 			 * (space).
 			 */
 			prefix_pattern += strspn(prefix_pattern, "*");
-			for (;; ++lines) {
-				if (initial_first_line_tokens_match(
-					lines,
+			for (;; ++line) {
+				if (initial_line_tokens_match(
+					line,
+					line_end,
 					prefix_pattern
 					))
 					return true;
-				/* A token separator must be matched
-				 * explicitly.
-				 */
-				if (*lines == ' ')
-					return false;
-				if (*lines == '\n' || !*lines)
+				if (line >= line_end || *line == ' ')
 					break;
 			}
-
+			/* The end of a line or the end of a token without
+			 * an explicitly matched token separator (space)
+			 * but not the end of the pattern.
+			 */
+			assert(prefix_pattern[0]);
+			return false;
+		}
+		if (line >= line_end) {
 			/* The end of a line but not the end of the pattern.
 			 */
 			assert(prefix_pattern[0]);
 			return false;
+		}
+		switch (prefix_pattern[0]) {
 		case '?':
 			/* A question mark matches any token character byte but
 			 * not a token separator (space).
 			 */
-			assert(*lines != ' ');
-			assert(*lines != '\n');
-			assert(*lines);
+			assert(line < line_end);
+			assert(*line != ' ');
+			++line;
 			continue;
 		case '[': {
 			bool const negation = prefix_pattern[1] == '!';
@@ -121,9 +118,8 @@ initial_first_line_tokens_match(
 			 * any token character byte not in the class.
 			 * Neither matches a token separator (space).
 			 */
-			assert(*lines != ' ');
-			assert(*lines != '\n');
-			assert(*lines);
+			assert(line < line_end);
+			assert(*line != ' ');
 			prefix_pattern = begin;
 			do {
 				if (
@@ -133,8 +129,8 @@ initial_first_line_tokens_match(
 					/* A character byte range.
 					 */
 					if (
-						*lines >= prefix_pattern[0] &&
-						*lines <= prefix_pattern[2]
+						*line >= prefix_pattern[0] &&
+						*line <= prefix_pattern[2]
 						)
 						break;
 					prefix_pattern += 3;
@@ -142,7 +138,7 @@ initial_first_line_tokens_match(
 				else {
 					/* A character byte.
 					 */
-					if (*lines == prefix_pattern[0])
+					if (*line == prefix_pattern[0])
 						break;
 					++prefix_pattern;
 				}
@@ -155,26 +151,40 @@ initial_first_line_tokens_match(
 				)
 				return false;
 			prefix_pattern = end;
+			++line;
 			continue;
 		}
 		case '\\':
 			/* A backslash preserves the literal meaning of
 			 * the following character byte.
 			 */
-			assert(*lines != ' ');
-			assert(*lines != '\n');
-			assert(*lines);
+			assert(line < line_end);
+			assert(*line != ' ');
 			if (prefix_pattern[1])
 				++prefix_pattern;
 			break;
 		default:
 			break;
 		}
-		if (*lines != prefix_pattern[0])
+		if (*line != prefix_pattern[0])
 			return false;
+		++line;
 	}
 	/* The end of the pattern.
-	 * Accept at the end of a token and at the end of a line.
+	 * Accept at the end of a line and at the end of a token.
 	 */
-	return *lines == ' ' || *lines == '\n' || !*lines;
+	assert(line <= line_end);
+	return line >= line_end || *line == ' ';
+}
+
+static bool
+initial_first_line_tokens_match(
+	char const *lines,
+	char const *prefix_pattern
+	) {
+	return initial_line_tokens_match(
+		lines,
+		lines + strcspn(lines, "\n"),
+		prefix_pattern
+		);
 }
