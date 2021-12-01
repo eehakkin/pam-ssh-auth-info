@@ -23,6 +23,10 @@
 
 /* Check if the initial tokens on the first line matches the pattern.
  *
+ * Any character byte that appears in a pattern, other than the extended
+ * patterns and the special pattern characters described below, matches
+ * itself.
+ *
  * The special pattern characters:
  *
  *  *  Matches any number of (including zero) token character bytes but not
@@ -36,7 +40,144 @@
  *     (space). A class may contain character bytes ([abcde]) and character
  *     byte ranges ([a-e]).
  *  \  Preserves the literal meaning of the following character byte.
+ *
+ * The extended patterns:
+ *
+ *  ?(pattern|pattern|...)  Matches zero or one occurence of the given
+ *                          patterns.
+ *                          Does not match a token separator (space).
+ *  *(pattern|pattern|...)  Matches zero or more occurences of the given
+ *                          patterns.
+ *                          Does not match a token separator (space).
+ *  +(pattern|pattern|...)  Matches one or more occurences of the given
+ *                          patterns.
+ *                          Does not match a token separator (space).
+ *  @(pattern|pattern|...)  Matches one of the given patterns.
+ *                          Does not match a token separator (space).
+ *  !(pattern|pattern|...)  Matches anything except one of the given
+ *                          patterns or a token separator (space).
  */
+static bool
+initial_line_tokens_match(
+	char const *line,
+	char const *line_end,
+	char const *prefix_pattern,
+	char const *const prefix_pattern_end
+	);
+
+static bool
+initial_line_tokens_match_pattern_list(
+	char const *line,
+	char const *line_end,
+	char const *prefix_pattern_list,
+	char const *const prefix_pattern_list_end
+	) {
+	char const *prefix_pattern = prefix_pattern_list;
+	for (;;) {
+		char const *prefix_pattern_end = find_in_pattern(
+			prefix_pattern,
+			prefix_pattern_list_end,
+			'|'
+			);
+		if (!prefix_pattern_end)
+			prefix_pattern_end = prefix_pattern_list_end;
+		if (initial_line_tokens_match(
+			line,
+			line_end,
+			prefix_pattern,
+			prefix_pattern_end
+			))
+			return true;
+		if (prefix_pattern_end == prefix_pattern_list_end)
+			break;
+		prefix_pattern = prefix_pattern_end + 1;
+	}
+	return false;
+}
+
+static bool
+initial_line_tokens_match_extended_pattern(
+	char const *const line,
+	char const *const line_end,
+	struct extended_pattern_info const *const info,
+	char const *const prefix_pattern_end,
+	unsigned const count
+	) {
+	char const *line_suffix = line;
+	if (info->max == 0) {  /* !(...) */
+		for (;; ++line_suffix) {
+			if (
+				!initial_line_tokens_match_pattern_list(
+					line,
+					line_suffix,
+					info->list,
+					info->list_end
+					) &&
+				initial_line_tokens_match(
+					line_suffix,
+					line_end,
+					info->list_end + 1,
+					prefix_pattern_end
+					)
+				)
+				return true;
+			if (line_suffix >= line_end || *line_suffix == ' ')
+				/* The end of a line or the end of a token.
+				 */
+				return false;
+		}
+	}
+	else {
+		if (
+			count >= info->min &&
+			initial_line_tokens_match(
+				line,
+				line_end,
+				info->list_end + 1,
+				prefix_pattern_end
+				)
+			)
+			return true;
+		if (count >= info->max)
+			/* No more occurences can be found.
+			 */
+			return false;
+		if (count >= info->min) {
+			/* Enough occurences have been found
+			 * thus skip empty occurences as they would not change
+			 * anything.
+			 */
+			if (line_suffix >= line_end || *line_suffix == ' ')
+				/* The end of a line or the end of a token.
+				 */
+				return false;
+			++line_suffix;
+		}
+		for (;; ++line_suffix) {
+			if (
+				initial_line_tokens_match_pattern_list(
+					line,
+					line_suffix,
+					info->list,
+					info->list_end
+					) &&
+				initial_line_tokens_match_extended_pattern(
+					line_suffix,
+					line_end,
+					info,
+					prefix_pattern_end,
+					count + 1
+					)
+				)
+				return true;
+			if (line_suffix >= line_end || *line_suffix == ' ')
+				/* The end of a line or the end of a token.
+				 */
+				return false;
+		}
+	}
+}
+
 static bool
 initial_line_tokens_match(
 	char const *line,
@@ -46,6 +187,7 @@ initial_line_tokens_match(
 	) {
 	for (; prefix_pattern < prefix_pattern_end; ++prefix_pattern) {
 		struct character_class_info character_class;
+		struct extended_pattern_info extended_pattern;
 		if (line < line_end && *line == ' ') {
 			/* A token separator must be matched explicitly.
 			 */
@@ -66,6 +208,19 @@ initial_line_tokens_match(
 			 * token separator is the end of the initial tokens.
 			 */
 			line_end = line;
+		}
+		if (is_extended_pattern(
+			prefix_pattern,
+			prefix_pattern_end,
+			&extended_pattern
+			)) {
+			return initial_line_tokens_match_extended_pattern(
+				line,
+				line_end,
+				&extended_pattern,
+				prefix_pattern_end,
+				0
+				);
 		}
 		if (prefix_pattern[0] == '*') {
 			/* An asterisk matches any number of (including zero)

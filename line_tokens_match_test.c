@@ -27,21 +27,29 @@ struct {
 	struct {
 		char const *pattern;
 		bool expected;
-	} pattern_data[98];
+	} pattern_data[100];
 } test_data[] = {
 	/* The first line is empty.
 	 */
-	{"[abc]", {
-		{"[[]abc[]]", true},
-		{"[][]abc[][]", true},
-		{"\\[abc\\]", true},
-		{"[[][-a-z][-a-z-][a-z-][]]", true},
-		{"[[][!b-z][!ac-z][!abd-z][]]", true},
-		{"[![]abc[]]", false},
-		{"[[][!a]bc[]]", false},
-		{"[[]a[!a-z]c[]]", false},
-		{"[[]ab[!ab-yz][]]", false},
-		{"[[]abc[!]]", false},
+	{"[abbccc]", {
+		{"[[]abbccc[]]", true},
+		{"[][]abbccc[][]", true},
+		{"\\[abbccc\\]", true},
+		{"[[]abbccc?(dddd)[]]", true},
+		{"[[]?(a)?(bb)?(ccc)?(dddd)[]]", true},
+		{"[[]*(|a)*(|b)*(|c)*(|d)[]]", true},
+		{"[[]@(a)@(bb)@(ccc)[]]", true},
+		{"[[]!(|*b*|*c*)!(|*a*|*c*)!(|*a*|*b*)[]]", true},
+		{"[[][-a-z][-a-z-][-a-z-][a-z-][a-z-][a-z-][]]", true},
+		{"[[][!b-z][!ac-z][!ac-z][!abd-z][!abd-z][!abd-z][]]", true},
+		{"[![]abbccc[]]", false},
+		{"[[][!a]bbccc[]]", false},
+		{"[[]a[!a-z]bccc[]]", false},
+		{"[[]abb[!ab-yz]cc[]]", false},
+		{"[[]abbccc[!]]", false},
+		{"[[]?(a)?(b)?(ccc)[]]", false},
+		{"[[]@(a)@(b)@(ccc)[]]", false},
+		{"[[]!(|*b*|*c*)!(|*b*)!(|*a*|*b*)[]]", false},
 		{NULL}
 	}},
 	{"\\", {
@@ -61,7 +69,9 @@ struct {
 	{"", {
 		{"", true},
 		{"*", true},
+		{"@(*)", true},
 		{"* *", false},
+		{"@(* *)", false},
 		{"*?", false},
 		{"?", false},
 		{"?*", false},
@@ -70,7 +80,9 @@ struct {
 	{"\n", {
 		{"", true},
 		{"*", true},
+		{"@(*)", true},
 		{"* *", false},
+		{"@(* *)", false},
 		{"*?", false},
 		{"?", false},
 		{"?*", false},
@@ -83,7 +95,9 @@ struct {
 		 */
 		{"", false},
 		{"*", true},
+		{"@(*)", true},
 		{"* *", false},
+		{"@(* *)", false},
 		{"*?", true},
 		{"?", false},
 		{"?*", true},
@@ -123,6 +137,7 @@ struct {
 		 */
 		{"", false},
 		{"*", true},
+		{"@(*)", true},
 		{"*?", true},
 		{"?", false},
 		{"?*", true},
@@ -157,6 +172,7 @@ struct {
 		 */
 		{"* ", false},
 		{"* *", true},
+		{"@(* *)", false},
 		{"* *?", true},
 		{"* ?", false},
 		{"* ?*", true},

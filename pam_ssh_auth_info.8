@@ -76,7 +76,10 @@ Do not log success messages to syslog.
 .SS "PATTERNS"
 .PP
 Any character byte that appears in a pattern,
-other than the special pattern characters described below,
+other than
+the extended patterns and
+the special pattern characters
+described below,
 matches itself.
 .PP
 The special pattern characters have the following meanings:
@@ -110,6 +113,28 @@ character byte ranges (\fB[a-e]\fR).
 .TP
 .B \\\\
 Preserves the literal meaning of the following character byte.
+.PP
+The extended patterns have the following meanings:
+.TP
+.BI "?(" pattern "|" pattern "|" \fR... ")"
+Matches one or zero occurence of the given patterns.
+Does not match a word separator (space).
+.TP
+.BI "*(" pattern "|" pattern "|" \fR... ")"
+Matches zero or more occurence of the given patterns.
+Does not match a word separator (space).
+.TP
+.BI "+(" pattern "|" pattern "|" \fR... ")"
+Matches one or more occurence of the given patterns.
+Does not match a word separator (space).
+.TP
+.BI "@(" pattern "|" pattern "|" \fR... ")"
+Matches one of the given token patterns.
+Does not match a word separator (space).
+.TP
+.BI "!(" pattern "|" pattern "|" \fR... ")"
+Matches anything except one of the given token patterns or
+a token separator (space).
 .PP
 SSH authentication information consists of lines having a format like
 .IP
@@ -190,20 +215,13 @@ public key authentication
 (in which case
 the key type
 contains \(lqsk-\(rq and
-ends with \(lq@openssh.com\(rq) and
-at least one previous successful
-non-FIDO
-public key authentication
-(in which case
-the key type
-does not start with \(lqsk-\(rq nor with \(lqwebauthn-sk-\(rq thus
-the third key type character byte
-is neither \(oq-\(cq nor \(oqb\(cq).
+ends with \(lq@openssh.com\(rq).
+If multiple public key authentications are required,
+only one of them is required to be a FIDO authenticator algorithm based one.
 .IP
 .EX
 auth  requisite  pam_ssh_auth_info.so quiet \\
-                     publickey=*sk-*@openssh.com \\
-                     publickey=??[!-b]*
+                     publickey=*sk-*@openssh.com
 .EE
 .PP
 Require that there is
@@ -213,13 +231,19 @@ public key authentication
 (in which case
 the key type
 contains \(lqsk-\(rq and
-ends with \(lq@openssh.com\(rq).
-If multiple public key authentications are required,
-only one of them is required to be a FIDO authenticator algorithm based one.
+ends with \(lq@openssh.com\(rq) and
+at least one previous successful
+non-FIDO
+public key authentication
+(in which case
+the key type
+does not contain \(lqsk-\(rq or
+does not end with \(lq@openssh.com\(rq).
 .IP
 .EX
 auth  requisite  pam_ssh_auth_info.so quiet \\
-                     publickey=*sk-*@openssh.com
+                     publickey=*sk-*@openssh.com \\
+                     publickey=!(*sk-*@openssh.com)
 .EE
 
 .SH "ENVIRONMENT"

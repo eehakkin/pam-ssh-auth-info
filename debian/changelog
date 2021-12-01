@@ -1,6 +1,7 @@
 pam-ssh-auth-info (1.2.20211201) unstable; urgency=low
 
   * Fixed handling of unpaired backslashes.
+  * Added support for patterns containing extended patterns.
 
  -- Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>  Wed, 01 Dec 2021 18:08:31 +0300
 

@@ -1,10 +1,14 @@
 Source: pam-ssh-auth-info
 Build-Depends:
 	debhelper-compat (= 13)
+Homepage: https://github.Eero.xn--Hkkinen-5wa.fi/pam-ssh-auth-info/
 Maintainer: Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>
 Priority: optional
+Rules-Requires-Root: no
 Section: admin
 Standards-Version: 4.5.1
+Vcs-Browser: https://github.com/eehakkin/pam-ssh-auth-info
+Vcs-Git: https://github.com/eehakkin/pam-ssh-auth-info.git
 
 Package: libpam-ssh-auth-info
 Architecture: any
