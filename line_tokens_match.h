@@ -41,14 +41,16 @@ static bool
 initial_line_tokens_match(
 	char const *line,
 	char const *line_end,
-	char const *prefix_pattern
+	char const *prefix_pattern,
+	char const *const prefix_pattern_end
 	) {
-	for (; prefix_pattern[0]; ++prefix_pattern) {
+	for (; prefix_pattern < prefix_pattern_end; ++prefix_pattern) {
 		struct character_class_info character_class;
 		if (line < line_end && *line == ' ') {
 			/* A token separator must be matched explicitly.
 			 */
 			if (
+				prefix_pattern_end - prefix_pattern >= 2 &&
 				prefix_pattern[0] == '\\' &&
 				prefix_pattern[1] == ' '
 				)
@@ -70,12 +72,17 @@ initial_line_tokens_match(
 			 * token character bytes but not a token separator
 			 * (space).
 			 */
-			prefix_pattern += strspn(prefix_pattern, "*");
+			while (
+				prefix_pattern < prefix_pattern_end &&
+				prefix_pattern[0] == '*'
+				)
+				++prefix_pattern;
 			for (;; ++line) {
 				if (initial_line_tokens_match(
 					line,
 					line_end,
-					prefix_pattern
+					prefix_pattern,
+					prefix_pattern_end
 					))
 					return true;
 				if (line >= line_end || *line == ' ')
@@ -85,13 +92,13 @@ initial_line_tokens_match(
 			 * an explicitly matched token separator (space)
 			 * but not the end of the pattern.
 			 */
-			assert(prefix_pattern[0]);
+			assert(prefix_pattern < prefix_pattern_end);
 			return false;
 		}
 		if (line >= line_end) {
 			/* The end of a line but not the end of the pattern.
 			 */
-			assert(prefix_pattern[0]);
+			assert(prefix_pattern < prefix_pattern_end);
 			return false;
 		}
 		switch (prefix_pattern[0]) {
@@ -106,6 +113,7 @@ initial_line_tokens_match(
 		case '[':
 			if (!is_character_class(
 				prefix_pattern,
+				prefix_pattern_end,
 				&character_class
 				))
 				/* An opening bracket ([) without a matching
@@ -160,7 +168,7 @@ initial_line_tokens_match(
 			 */
 			assert(line < line_end);
 			assert(*line != ' ');
-			if (prefix_pattern[1])
+			if (prefix_pattern_end - prefix_pattern >= 2)
 				++prefix_pattern;
 			break;
 		default:
@@ -185,6 +193,7 @@ initial_first_line_tokens_match(
 	return initial_line_tokens_match(
 		lines,
 		lines + strcspn(lines, "\n"),
-		prefix_pattern
+		prefix_pattern,
+		prefix_pattern + strlen(prefix_pattern)
 		);
 }

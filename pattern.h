@@ -26,8 +26,11 @@ struct character_class_info {
 static bool
 is_character_class(
 	char const *pattern,
+	char const *const pattern_end,
 	struct character_class_info *info
 	) {
+	if (pattern_end - pattern < 3)
+		return false;
 	if (pattern[0] != '[')
 		return false;
 	if (pattern[1] == '!') {  /* [!...] */
@@ -38,8 +41,10 @@ is_character_class(
 		info->negation = false;
 		info->begin = pattern + 1;
 	}
-	if (!*info->begin)
-		return false;
-	info->end = strchr(info->begin + 1, ']');
+	info->end = memchr(
+		info->begin + 1,
+		']',
+		(size_t)(pattern_end - info->begin - 1)
+		);
 	return info->end != NULL;
 }
