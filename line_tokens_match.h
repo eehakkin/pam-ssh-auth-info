@@ -164,7 +164,8 @@ initial_first_line_tokens_match(
 			assert(*lines != ' ');
 			assert(*lines != '\n');
 			assert(*lines);
-			++prefix_pattern;
+			if (prefix_pattern[1])
+				++prefix_pattern;
 			break;
 		default:
 			break;

@@ -5,7 +5,7 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 override_dh_auto_configure:
 	version=$$( dpkg-parsechangelog --show-field=Version ) && \
-	./configure --version | grep -Fq -- "$${version%%-*}"
+	./configure --version | grep -Fq -- "$${version%%[-~]*}"
 	dh_auto_configure -- --libdir='/lib/$(DEB_HOST_MULTIARCH)'
 
 override_dh_install:
