@@ -1,3 +1,10 @@
+pam-ssh-auth-info (1.2.20211208) unstable; urgency=low
+
+  * Added a missing libpam-dev build dependency (closes: GH-2).
+    Thanks to Cyril B. (@cbay).
+
+ -- Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>  Wed, 08 Dec 2021 13:32:50 +0200
+
 pam-ssh-auth-info (1.2.20211201) unstable; urgency=low
 
   * Fixed handling of unpaired backslashes.

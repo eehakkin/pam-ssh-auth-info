@@ -1,6 +1,7 @@
 Source: pam-ssh-auth-info
 Build-Depends:
-	debhelper-compat (= 13), libpam0g-dev
+	debhelper-compat (= 13),
+	libpam-dev
 Homepage: https://github.Eero.xn--Hkkinen-5wa.fi/pam-ssh-auth-info/
 Maintainer: Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>
 Priority: optional
