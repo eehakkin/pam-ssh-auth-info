@@ -43,7 +43,7 @@ It is possible to enable PAM authentication in SSH server using
 keyboard interactive challenge response authentication or
 password authentication.
 
-### Challenge Response Authentication
+### Keyboard Interactive Authentication
 
 In order to enable PAM authentication using keyboard interactive
 challenge response authentication, the following SSH server options must
@@ -67,7 +67,13 @@ defaults):
     ```
     for optional public key authentication
 * ChallengeResponseAuthentication yes
-* KeyboardInteractiveAuthentication yes
+  - Before OpenSSH version 8.7p1, **ChallengeResponseAuthentication
+    yes** was needed for **KbdInteractiveAuthentication yes** to have an
+    effect.
+  - Since OpenSSH version 8.7p1, **ChallengeResponseAuthentication yes**
+    is a deprecated alias for **KbdInteractiveAuthentication yes**. It
+    is still allowed but not needed anymore.
+* KbdInteractiveAuthentication yes
 * UsePAM yes
 
 ### Password Authentication
