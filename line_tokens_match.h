@@ -74,7 +74,7 @@ is_end_of_line_or_token(
 static bool
 initial_line_tokens_match(
 	char const *line,
-	char const *line_end,
+	char const *const line_end,
 	char const *prefix_pattern,
 	char const *const prefix_pattern_end
 	);
@@ -211,34 +211,13 @@ initial_line_tokens_match_extended_pattern(
 static bool
 initial_line_tokens_match(
 	char const *line,
-	char const *line_end,
+	char const *const line_end,
 	char const *prefix_pattern,
 	char const *const prefix_pattern_end
 	) {
 	for (; prefix_pattern < prefix_pattern_end; ++prefix_pattern) {
 		struct character_class_info character_class;
 		struct extended_pattern_info extended_pattern;
-		if (line < line_end && *line == ' ') {
-			/* A token separator must be matched explicitly.
-			 */
-			if (
-				prefix_pattern_end - prefix_pattern >= 2 &&
-				prefix_pattern[0] == '\\' &&
-				prefix_pattern[1] == ' '
-				)
-				++prefix_pattern;
-			if (
-				prefix_pattern[0] == ' ' ||
-				prefix_pattern[0] == '='
-				) {
-				++line;
-				continue;
-			}
-			/* The end of a token without an explicitly matched
-			 * token separator is the end of the initial tokens.
-			 */
-			line_end = line;
-		}
 		if (is_extended_pattern(
 			prefix_pattern,
 			prefix_pattern_end,
@@ -254,7 +233,8 @@ initial_line_tokens_match(
 				0
 				);
 		}
-		if (prefix_pattern[0] == '*') {
+		switch (prefix_pattern[0]) {
+		case '*':
 			/* An asterisk matches any number of (including zero)
 			 * token character bytes but not a token separator
 			 * (space).
@@ -275,19 +255,23 @@ initial_line_tokens_match(
 				if (is_end_of_line_or_token(line, line_end))
 					return false;
 			}
-		}
-		if (line >= line_end) {
-			/* The end of a line but not the end of the pattern.
+			assert(false);
+		case '=':
+			/* An equal sign matches an equal sign or a token
+			 * separator (space).
 			 */
-			assert(prefix_pattern < prefix_pattern_end);
-			return false;
-		}
-		switch (prefix_pattern[0]) {
+			if (line >= line_end)
+				return false;
+			if (*line != '=' && !is_line_token_separator(*line))
+				return false;
+			++line;
+			continue;
 		case '?':
 			/* A question mark matches any token character byte but
 			 * not a token separator (space).
 			 */
-			assert(!is_end_of_line_or_token(line, line_end));
+			if (is_end_of_line_or_token(line, line_end))
+				return false;
 			++line;
 			continue;
 		case '[':
@@ -307,7 +291,8 @@ initial_line_tokens_match(
 			 * any token character byte not in the class.
 			 * Neither matches a token separator (space).
 			 */
-			assert(!is_end_of_line_or_token(line, line_end));
+			if (is_end_of_line_or_token(line, line_end))
+				return false;
 			prefix_pattern = character_class.begin;
 			do {
 				if (
@@ -349,7 +334,8 @@ initial_line_tokens_match(
 				++prefix_pattern;
 			break;
 		}
-		assert(!is_end_of_line_or_token(line, line_end));
+		if (line >= line_end)
+			return false;
 		if (*line != prefix_pattern[0])
 			return false;
 		++line;
