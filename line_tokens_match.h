@@ -21,7 +21,16 @@
 
 #include "pattern.h"
 
-/* Check if the initial tokens on the first line matches the pattern.
+static bool
+is_end_of_line_or_token(
+	char const *const line,
+	char const *const line_end
+	) {
+	assert(line <= line_end);
+	return line >= line_end || *line == ' ';
+}
+
+/* Check if the initial tokens on the line matches the pattern.
  *
  * Any character byte that appears in a pattern, other than the extended
  * patterns and the special pattern characters described below, matches
@@ -129,9 +138,7 @@ initial_line_tokens_match_extended_pattern(
 					)
 				)
 				return true;
-			if (line_tail >= line_end || *line_tail == ' ')
-				/* The end of a line or the end of a token.
-				 */
+			if (is_end_of_line_or_token(line_tail, line_end))
 				return false;
 		}
 	}
@@ -168,9 +175,7 @@ initial_line_tokens_match_extended_pattern(
 			 * thus skip empty occurences as they would not change
 			 * anything.
 			 */
-			if (line_tail >= line_end || *line_tail == ' ')
-				/* The end of a line or the end of a token.
-				 */
+			if (is_end_of_line_or_token(line_tail, line_end))
 				return false;
 			++line_tail;
 		}
@@ -192,9 +197,7 @@ initial_line_tokens_match_extended_pattern(
 					)
 				)
 				return true;
-			if (line_tail >= line_end || *line_tail == ' ')
-				/* The end of a line or the end of a token.
-				 */
+			if (is_end_of_line_or_token(line_tail, line_end))
 				return false;
 		}
 	}
@@ -264,15 +267,9 @@ initial_line_tokens_match(
 					prefix_pattern_end
 					))
 					return true;
-				if (line >= line_end || *line == ' ')
-					break;
+				if (is_end_of_line_or_token(line, line_end))
+					return false;
 			}
-			/* The end of a line or the end of a token without
-			 * an explicitly matched token separator (space)
-			 * but not the end of the pattern.
-			 */
-			assert(prefix_pattern < prefix_pattern_end);
-			return false;
 		}
 		if (line >= line_end) {
 			/* The end of a line but not the end of the pattern.
@@ -285,8 +282,7 @@ initial_line_tokens_match(
 			/* A question mark matches any token character byte but
 			 * not a token separator (space).
 			 */
-			assert(line < line_end);
-			assert(*line != ' ');
+			assert(!is_end_of_line_or_token(line, line_end));
 			++line;
 			continue;
 		case '[':
@@ -306,8 +302,7 @@ initial_line_tokens_match(
 			 * any token character byte not in the class.
 			 * Neither matches a token separator (space).
 			 */
-			assert(line < line_end);
-			assert(*line != ' ');
+			assert(!is_end_of_line_or_token(line, line_end));
 			prefix_pattern = character_class.begin;
 			do {
 				if (
@@ -345,14 +340,11 @@ initial_line_tokens_match(
 			/* A backslash preserves the literal meaning of
 			 * the following character byte.
 			 */
-			assert(line < line_end);
-			assert(*line != ' ');
 			if (prefix_pattern_end - prefix_pattern >= 2)
 				++prefix_pattern;
 			break;
-		default:
-			break;
 		}
+		assert(!is_end_of_line_or_token(line, line_end));
 		if (*line != prefix_pattern[0])
 			return false;
 		++line;
@@ -360,8 +352,7 @@ initial_line_tokens_match(
 	/* The end of the pattern.
 	 * Accept at the end of a line and at the end of a token.
 	 */
-	assert(line <= line_end);
-	return line >= line_end || *line == ' ';
+	return is_end_of_line_or_token(line, line_end);
 }
 
 static bool
