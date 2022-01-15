@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+ * Copyright © 2021 - 2022 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License version 3
@@ -67,9 +67,9 @@ initial_line_tokens_match(
 
 static bool
 initial_line_tokens_match_pattern_list(
-	char const *line,
-	char const *line_end,
-	char const *prefix_pattern_list,
+	char const *const line,
+	char const *const line_end,
+	char const *const prefix_pattern_list,
 	char const *const prefix_pattern_list_end
 	) {
 	char const *prefix_pattern = prefix_pattern_list;
@@ -100,28 +100,36 @@ initial_line_tokens_match_extended_pattern(
 	char const *const line,
 	char const *const line_end,
 	struct extended_pattern_info const *const info,
+	char const *const prefix_pattern,
 	char const *const prefix_pattern_end,
 	unsigned const count
 	) {
-	char const *line_suffix = line;
+	char const *line_tail;
 	if (info->max == 0) {  /* !(...) */
-		for (;; ++line_suffix) {
+		/* Try to split the line to a head and a tail so that
+		 *  1) the line head is a token or a token prefix
+		 *     (does not contain a space),
+		 *  2) the line head does not match any of the patterns in
+		 *     the extended pattern and
+		 *  3) the line tail matches the rest of the prefix pattern.
+		 */
+		for (line_tail = line;; ++line_tail) {
 			if (
 				!initial_line_tokens_match_pattern_list(
 					line,
-					line_suffix,
+					line_tail,
 					info->list,
 					info->list_end
 					) &&
 				initial_line_tokens_match(
-					line_suffix,
+					line_tail,
 					line_end,
-					info->list_end + 1,
+					prefix_pattern,
 					prefix_pattern_end
 					)
 				)
 				return true;
-			if (line_suffix >= line_end || *line_suffix == ' ')
+			if (line_tail >= line_end || *line_tail == ' ')
 				/* The end of a line or the end of a token.
 				 */
 				return false;
@@ -133,44 +141,58 @@ initial_line_tokens_match_extended_pattern(
 			initial_line_tokens_match(
 				line,
 				line_end,
-				info->list_end + 1,
+				prefix_pattern,
 				prefix_pattern_end
 				)
 			)
+			/* There are enough occurences and
+			 * the line matches the rest of the prefix
+			 * pattern.
+			 */
 			return true;
 		if (count >= info->max)
 			/* No more occurences can be found.
 			 */
 			return false;
+		/* Try to split the line to a head and a tail so that
+		 *  1) the line head is a token or a token prefix
+		 *     (does not contain a space),
+		 *  2) the line head matches at least one of the patterns in
+		 *     the extended pattern and
+		 *  3) the line tail matches the extended pattern with
+		 *     increased occurence count.
+		 */
+		line_tail = line;
 		if (count >= info->min) {
 			/* Enough occurences have been found
 			 * thus skip empty occurences as they would not change
 			 * anything.
 			 */
-			if (line_suffix >= line_end || *line_suffix == ' ')
+			if (line_tail >= line_end || *line_tail == ' ')
 				/* The end of a line or the end of a token.
 				 */
 				return false;
-			++line_suffix;
+			++line_tail;
 		}
-		for (;; ++line_suffix) {
+		for (;; ++line_tail) {
 			if (
 				initial_line_tokens_match_pattern_list(
 					line,
-					line_suffix,
+					line_tail,
 					info->list,
 					info->list_end
 					) &&
 				initial_line_tokens_match_extended_pattern(
-					line_suffix,
+					line_tail,
 					line_end,
 					info,
+					prefix_pattern,
 					prefix_pattern_end,
 					count + 1
 					)
 				)
 				return true;
-			if (line_suffix >= line_end || *line_suffix == ' ')
+			if (line_tail >= line_end || *line_tail == ' ')
 				/* The end of a line or the end of a token.
 				 */
 				return false;
@@ -214,10 +236,12 @@ initial_line_tokens_match(
 			prefix_pattern_end,
 			&extended_pattern
 			)) {
+			prefix_pattern = extended_pattern.list_end + 1;
 			return initial_line_tokens_match_extended_pattern(
 				line,
 				line_end,
 				&extended_pattern,
+				prefix_pattern,
 				prefix_pattern_end,
 				0
 				);
@@ -342,8 +366,8 @@ initial_line_tokens_match(
 
 static bool
 initial_first_line_tokens_match(
-	char const *lines,
-	char const *prefix_pattern
+	char const *const lines,
+	char const *const prefix_pattern
 	) {
 	return initial_line_tokens_match(
 		lines,
