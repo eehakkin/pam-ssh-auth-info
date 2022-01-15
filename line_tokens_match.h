@@ -22,12 +22,17 @@
 #include "pattern.h"
 
 static bool
+is_line_token_separator(char ch) {
+	return ch == ' ';
+}
+
+static bool
 is_end_of_line_or_token(
 	char const *const line,
 	char const *const line_end
 	) {
 	assert(line <= line_end);
-	return line >= line_end || *line == ' ';
+	return line >= line_end || is_line_token_separator(*line);
 }
 
 /* Check if the initial tokens on the line matches the pattern.
