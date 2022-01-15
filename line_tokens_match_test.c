@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+ * Copyright © 2021 - 2022 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
@@ -27,9 +27,9 @@ struct {
 	struct {
 		char const *pattern;
 		bool expected;
-	} pattern_data[100];
+	} pattern_data[103];
 } test_data[] = {
-	/* The first line is empty.
+	/* The first line contains special pattern character bytes.
 	 */
 	{"[abbccc]", {
 		{"[[]abbccc[]]", true},
@@ -39,6 +39,7 @@ struct {
 		{"[[]?(a)?(bb)?(ccc)?(dddd)[]]", true},
 		{"[[]*(|a)*(|b)*(|c)*(|d)[]]", true},
 		{"[[]@(a)@(bb)@(ccc)[]]", true},
+		{"[[]+(|a)+(|b)+(|c)+(|d)[]]", true},
 		{"[[]!(|*b*|*c*)!(|*a*|*c*)!(|*a*|*b*)[]]", true},
 		{"[[][-a-z][-a-z-][-a-z-][a-z-][a-z-][a-z-][]]", true},
 		{"[[][!b-z][!ac-z][!ac-z][!abd-z][!abd-z][!abd-z][]]", true},
@@ -49,6 +50,7 @@ struct {
 		{"[[]abbccc[!]]", false},
 		{"[[]?(a)?(b)?(ccc)[]]", false},
 		{"[[]@(a)@(b)@(ccc)[]]", false},
+		{"[[]+(|a)+(|b)+(|c)+(d)[]]", false},
 		{"[[]!(|*b*|*c*)!(|*b*)!(|*a*|*b*)[]]", false},
 		{NULL}
 	}},
@@ -66,6 +68,8 @@ struct {
 		{"[!\\]-", false},
 		{NULL}
 	}},
+	/* The first line is empty.
+	 */
 	{"", {
 		{"", true},
 		{"*", true},
@@ -77,6 +81,8 @@ struct {
 		{"?*", false},
 		{NULL}
 	}},
+	/* The first line is empty.
+	 */
 	{"\n", {
 		{"", true},
 		{"*", true},
@@ -141,6 +147,7 @@ struct {
 		{"*?", true},
 		{"?", false},
 		{"?*", true},
+		{"+(?)", true},
 		{"*thod", true},
 		{"*?thod", true},
 		{"*??thod", true},
@@ -176,6 +183,7 @@ struct {
 		{"* *?", true},
 		{"* ?", false},
 		{"* ?*", true},
+		{"+(?)=+(?)", true},
 		{"method=*-type", true},
 		{"method=*?-type", true},
 		{"method=*???"/* no trigraphs */"-type", true},
@@ -211,6 +219,7 @@ struct {
 		{"* * *?", true},
 		{"* * ?", false},
 		{"* * ?*", true},
+		{"+(?)=+(?)=+(?)", true},
 		{"method=key-type=*cdef==", true},
 		{"method=key-type=*?cdef==", true},
 		{"method=key-type=*??cdef==", true},
