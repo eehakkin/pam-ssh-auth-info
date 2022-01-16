@@ -15,7 +15,13 @@
  * <http://www.gnu.org/licenses/>.
  */
 
+#include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
+
+#ifndef SIZE_MAX
+#	define SIZE_MAX (~(size_t)0)
+#endif
 
 static char const *
 find_in_pattern(
@@ -23,6 +29,14 @@ find_in_pattern(
 	char const *const pattern_end,
 	char ch,
 	char const *const not_found
+	);
+
+static void
+measure_pattern(
+	char const *pattern,
+	char const *const pattern_end,
+	size_t *min,
+	size_t *max
 	);
 
 struct character_class_info {
@@ -64,6 +78,10 @@ struct extended_pattern_info {
 		unsigned min;
 		unsigned max;
 	} count;
+	struct {
+		size_t min;
+		size_t max;
+	} match_len;
 };
 
 static bool
@@ -100,7 +118,33 @@ is_extended_pattern(
 		return false;
 	info->begin = pattern + 2;
 	info->end = find_in_pattern(info->begin, pattern_end, ')', NULL);
-	return info->end != NULL;
+	if (!info->end)
+		return false;
+	info->match_len.min = SIZE_MAX;
+	info->match_len.max = 0u;
+	/* A match length is not meaningful for !(...).
+	 */
+	if (info->count.max != 0) { /* Not !(...) */
+		char const *pattern2 = info->begin;
+		for (;;) {
+			size_t min, max;
+			char const *pattern2_end = find_in_pattern(
+				pattern2,
+				info->end,
+				'|',
+				info->end
+				);
+			measure_pattern(pattern2, pattern2_end, &min, &max);
+			if (info->match_len.min > min)
+				info->match_len.min = min;
+			if (info->match_len.max < max)
+				info->match_len.max = max;
+			if (pattern2_end == info->end)
+				break;
+			pattern2 = pattern2_end + 1;
+		}
+	}
+	return true;
 }
 
 static char const *
@@ -136,4 +180,67 @@ find_in_pattern(
 		}
 	}
 	return not_found;
+}
+
+static void
+measure_pattern(
+	char const *pattern,
+	char const *const pattern_end,
+	size_t *min,
+	size_t *max
+	) {
+	*min = *max = 0u;
+	for (; pattern < pattern_end; ++pattern) {
+		struct character_class_info character_class;
+		struct extended_pattern_info extended_pattern;
+		if (is_extended_pattern(
+			pattern,
+			pattern_end,
+			&extended_pattern
+			)) {
+			if (extended_pattern.count.max == 0)
+				/* !(...) */
+				*max = SIZE_MAX;
+			else {
+				*min +=
+					extended_pattern.count.min *
+					extended_pattern.match_len.min;
+				/* Ditto for the maximum,
+				 * but do not let it to overflow.
+				 */
+				if (
+					extended_pattern.count.max <=
+					(SIZE_MAX - *max) /
+					extended_pattern.match_len.max
+					)
+					*max +=
+						extended_pattern.count.max *
+						extended_pattern.match_len.max;
+				else
+					*max = SIZE_MAX;
+			}
+			pattern = extended_pattern.end;
+			continue;
+		}
+		else if (is_character_class(
+			pattern,
+			pattern_end,
+			&character_class
+			))
+			pattern = character_class.end;
+		else if (*pattern == '*') {
+			*max = SIZE_MAX;
+			continue;
+		}
+		else if (*pattern == '\\') {
+			if (pattern_end - pattern >= 2)
+				++pattern;
+		}
+		++*min;
+		/* Ditto for the maximum,
+		 * but do not let it to overflow.
+		 */
+		if (*max != SIZE_MAX)
+			++*max;
+	}
 }

@@ -193,7 +193,9 @@ initial_line_tokens_match_extended_pattern(
 			++line_tail;
 		}
 		for (;; ++line_tail) {
+			size_t const match_len = (size_t)(line_tail - line);
 			if (
+				match_len >= info->match_len.min &&
 				initial_line_tokens_match_pattern_list(
 					line,
 					line_tail,
