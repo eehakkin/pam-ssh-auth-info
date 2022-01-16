@@ -91,10 +91,9 @@ initial_line_tokens_match_pattern_list(
 		char const *prefix_pattern_end = find_in_pattern(
 			prefix_pattern,
 			prefix_pattern_list_end,
-			'|'
+			'|',
+			prefix_pattern_list_end
 			);
-		if (!prefix_pattern_end)
-			prefix_pattern_end = prefix_pattern_list_end;
 		if (initial_line_tokens_match(
 			line,
 			line_end,

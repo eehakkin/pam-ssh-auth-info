@@ -21,7 +21,8 @@ static char const *
 find_in_pattern(
 	char const *pattern,
 	char const *const pattern_end,
-	char ch
+	char ch,
+	char const *const not_found
 	);
 
 struct character_class_info {
@@ -98,7 +99,7 @@ is_extended_pattern(
 	if (pattern[1] != '(')
 		return false;
 	info->begin = pattern + 2;
-	info->end = find_in_pattern(info->begin, pattern_end, ')');
+	info->end = find_in_pattern(info->begin, pattern_end, ')', NULL);
 	return info->end != NULL;
 }
 
@@ -106,7 +107,8 @@ static char const *
 find_in_pattern(
 	char const *pattern,
 	char const *const pattern_end,
-	char ch
+	char ch,
+	char const *const not_found
 	) {
 	for (; pattern < pattern_end; ++pattern) {
 		struct character_class_info character_class;
@@ -133,5 +135,5 @@ find_in_pattern(
 				++pattern;
 		}
 	}
-	return NULL;
+	return not_found;
 }
