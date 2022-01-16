@@ -113,13 +113,13 @@ initial_line_tokens_match_pattern_list(
 
 static bool
 initial_line_tokens_match_extended_pattern(
-	char const *const line,
+	char const *line,
 	char const *const line_end,
 	struct extended_pattern_info const *const info,
 	char const *const prefix_pattern,
 	char const *const prefix_pattern_end,
 	unsigned const recursion_limit,
-	unsigned const count
+	unsigned count
 	) {
 	char const *line_tail;
 	if (info->count.max == 0) {  /* !(...) */
@@ -152,57 +152,63 @@ initial_line_tokens_match_extended_pattern(
 				return false;
 		}
 	}
-	else {
+	/* If there are not enough occurences or
+	 * if the whole line does not match the rest of the prefix pattern,
+	 * try to split the line to a head and a tail so that
+	 *  1) the line head is a token or a token prefix
+	 *     (does not contain a space),
+	 *  2) the line head matches at least one of the patterns in
+	 *     the extended pattern and
+	 *  3) the line tail matches the extended pattern with increased
+	 *     occurence count.
+	 */
+	for (line_tail = line;;) {
+		size_t const match_len = (size_t)(line_tail - line);
+		if (line_tail == line) {
+			if (
+				count >= info->count.min &&
+				initial_line_tokens_match(
+					line,
+					line_end,
+					prefix_pattern,
+					prefix_pattern_end,
+					recursion_limit
+					)
+				)
+				/* There are enough occurences and
+				 * the whole line matches the rest of
+				 * the prefix pattern.
+				 */
+				return true;
+			if (count >= info->count.max)
+				/* No more occurences can be found.
+				 */
+				return false;
+		}
 		if (
-			count >= info->count.min &&
-			initial_line_tokens_match(
+			match_len >= info->match_len.min &&
+			(match_len || count < info->count.min) &&
+			initial_line_tokens_match_pattern_list(
 				line,
-				line_end,
-				prefix_pattern,
-				prefix_pattern_end,
+				line_tail,
+				info->begin,
+				info->end,
 				recursion_limit
 				)
-			)
-			/* There are enough occurences and
-			 * the line matches the rest of the prefix
-			 * pattern.
+			) {
+			/* The line head matches the pattern list and
+			 * either the line head is not empty or the occurence
+			 * count must be increased.
 			 */
-			return true;
-		if (count >= info->count.max)
-			/* No more occurences can be found.
-			 */
-			return false;
-		if (!recursion_limit)
-			return false;
-		/* Try to split the line to a head and a tail so that
-		 *  1) the line head is a token or a token prefix
-		 *     (does not contain a space),
-		 *  2) the line head matches at least one of the patterns in
-		 *     the extended pattern and
-		 *  3) the line tail matches the extended pattern with
-		 *     increased occurence count.
-		 */
-		line_tail = line;
-		if (count >= info->count.min) {
-			/* Enough occurences have been found
-			 * thus skip empty occurences as they would not change
-			 * anything.
-			 */
-			if (is_end_of_line_or_token(line_tail, line_end))
-				return false;
-			++line_tail;
-		}
-		for (;; ++line_tail) {
-			size_t const match_len = (size_t)(line_tail - line);
+			if (match_len == info->match_len.max) {
+				/* Tail call optimization.
+				 */
+				++count;
+				line = line_tail;
+				continue;
+			}
 			if (
-				match_len >= info->match_len.min &&
-				initial_line_tokens_match_pattern_list(
-					line,
-					line_tail,
-					info->begin,
-					info->end,
-					recursion_limit
-					) &&
+				recursion_limit &&
 				initial_line_tokens_match_extended_pattern(
 					line_tail,
 					line_end,
@@ -213,10 +219,14 @@ initial_line_tokens_match_extended_pattern(
 					count + 1
 					)
 				)
+				/* The line tail matches the extended pattern
+				 * with increased occurence count.
+				 */
 				return true;
-			if (is_end_of_line_or_token(line_tail, line_end))
-				return false;
 		}
+		if (is_end_of_line_or_token(line_tail, line_end))
+			return false;
+		++line_tail;
 	}
 }
 

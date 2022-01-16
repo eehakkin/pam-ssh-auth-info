@@ -262,7 +262,7 @@ struct {
 
 int
 main() {
-	unsigned const recursion_limit = 25u;
+	unsigned const recursion_limit = 5u;
 	for (int i = 0; test_data[i].lines; ++i) {
 		char const *const lines = test_data[i].lines;
 		for (int j = 0; test_data[i].pattern_data[j].pattern; ++j) {

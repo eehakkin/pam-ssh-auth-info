@@ -4,6 +4,7 @@ pam-ssh-auth-info (1.4.20220116) unstable; urgency=low
   * Fixed documentation.
   * Described SSH_USER_AUTH.
   * Implemented tail call optimization for * wildcard patterns.
+  * Implemented tail call optimization for extended patterns.
 
  -- Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>  Sun, 16 Jan 2022 16:12:38 +0200
 
