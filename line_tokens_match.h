@@ -260,6 +260,12 @@ initial_line_tokens_match(
 				prefix_pattern[0] == '*'
 				)
 				++prefix_pattern;
+			if (prefix_pattern == prefix_pattern_end)
+				/* An asterisk matches remaining token
+				 * character bytes to the end of the token and
+				 * and an empty prefix pattern matches there.
+				 */
+				return true;
 			if (!recursion_limit)
 				return false;
 			for (;; ++line) {
