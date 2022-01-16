@@ -266,8 +266,24 @@ consisting of a list of
 successfully completed authentication methods and
 public credentials (e.g. keys)
 used to authenticate the user.
-This information is provided
-by OpenSSH server since version 7.8p1.
+This environment variable
+is visible to PAM modules but not to user sessions and
+is provided by OpenSSH server since version 7.8p1.
+.TP
+.B SSH_USER_AUTH
+A location of a file
+containing
+SSH authentication information
+consisting of a list of
+successfully completed authentication methods and
+public credentials (e.g. keys)
+used to authenticate the user.
+This environment variable
+is visible to user sessions but not to PAM modules and
+is provided by OpenSSH server since version 7.8p1
+if the \fBExposeAuthInfo\fR server option is enabled.
+This may be a useful source
+for creating proper patterns.
 
 .SH "SEE ALSO"
 .BR pam (7)
