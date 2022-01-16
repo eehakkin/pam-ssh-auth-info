@@ -1,4 +1,4 @@
-\" Copyright © 2021 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+\" Copyright © 2021 - 2022 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
 \"
 \" This manual page is free software: you can redistribute it and/or
 \" modify it under the terms of the GNU General Public License version 3
@@ -17,7 +17,7 @@
 .HX 0
 .\}
 
-.TH "pam_ssh_auth_info" "8" "2021-01-07"
+.TH "pam_ssh_auth_info" "8" "2022-01-16"
 
 .SH "NAME"
 pam_ssh_auth_info \- test SSH authentication information
@@ -72,6 +72,10 @@ Do not log failure messages to syslog.
 .TP
 .B quiet_success
 Do not log success messages to syslog.
+.TP
+.IR \fBrecursion_limit = limit
+Change the recursion limit.
+This affects extended patterns and \fB*\fR wildcard patterns.
 
 .SS "PATTERNS"
 .PP
@@ -269,7 +273,7 @@ Home Page for pam_ssh_auth_info
 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
 
 .SH "COPYRIGHT"
-Copyright © 2021 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+Copyright © 2021 - 2022 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
 
 This manual page is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License version 3

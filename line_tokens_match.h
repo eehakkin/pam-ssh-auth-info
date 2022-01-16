@@ -76,7 +76,8 @@ initial_line_tokens_match(
 	char const *line,
 	char const *const line_end,
 	char const *prefix_pattern,
-	char const *const prefix_pattern_end
+	char const *const prefix_pattern_end,
+	unsigned const recursion_limit
 	);
 
 static bool
@@ -84,7 +85,8 @@ initial_line_tokens_match_pattern_list(
 	char const *const line,
 	char const *const line_end,
 	char const *const prefix_pattern_list,
-	char const *const prefix_pattern_list_end
+	char const *const prefix_pattern_list_end,
+	unsigned const recursion_limit
 	) {
 	char const *prefix_pattern = prefix_pattern_list;
 	for (;;) {
@@ -98,7 +100,8 @@ initial_line_tokens_match_pattern_list(
 			line,
 			line_end,
 			prefix_pattern,
-			prefix_pattern_end
+			prefix_pattern_end,
+			recursion_limit
 			))
 			return true;
 		if (prefix_pattern_end == prefix_pattern_list_end)
@@ -115,6 +118,7 @@ initial_line_tokens_match_extended_pattern(
 	struct extended_pattern_info const *const info,
 	char const *const prefix_pattern,
 	char const *const prefix_pattern_end,
+	unsigned const recursion_limit,
 	unsigned const count
 	) {
 	char const *line_tail;
@@ -132,13 +136,15 @@ initial_line_tokens_match_extended_pattern(
 					line,
 					line_tail,
 					info->begin,
-					info->end
+					info->end,
+					recursion_limit
 					) &&
 				initial_line_tokens_match(
 					line_tail,
 					line_end,
 					prefix_pattern,
-					prefix_pattern_end
+					prefix_pattern_end,
+					recursion_limit
 					)
 				)
 				return true;
@@ -153,7 +159,8 @@ initial_line_tokens_match_extended_pattern(
 				line,
 				line_end,
 				prefix_pattern,
-				prefix_pattern_end
+				prefix_pattern_end,
+				recursion_limit
 				)
 			)
 			/* There are enough occurences and
@@ -164,6 +171,8 @@ initial_line_tokens_match_extended_pattern(
 		if (count >= info->count.max)
 			/* No more occurences can be found.
 			 */
+			return false;
+		if (!recursion_limit)
 			return false;
 		/* Try to split the line to a head and a tail so that
 		 *  1) the line head is a token or a token prefix
@@ -189,7 +198,8 @@ initial_line_tokens_match_extended_pattern(
 					line,
 					line_tail,
 					info->begin,
-					info->end
+					info->end,
+					recursion_limit
 					) &&
 				initial_line_tokens_match_extended_pattern(
 					line_tail,
@@ -197,6 +207,7 @@ initial_line_tokens_match_extended_pattern(
 					info,
 					prefix_pattern,
 					prefix_pattern_end,
+					recursion_limit - 1,
 					count + 1
 					)
 				)
@@ -212,7 +223,8 @@ initial_line_tokens_match(
 	char const *line,
 	char const *const line_end,
 	char const *prefix_pattern,
-	char const *const prefix_pattern_end
+	char const *const prefix_pattern_end,
+	unsigned const recursion_limit
 	) {
 	for (; prefix_pattern < prefix_pattern_end; ++prefix_pattern) {
 		struct character_class_info character_class;
@@ -222,6 +234,8 @@ initial_line_tokens_match(
 			prefix_pattern_end,
 			&extended_pattern
 			)) {
+			if (!recursion_limit)
+				return false;
 			prefix_pattern = extended_pattern.end + 1;
 			return initial_line_tokens_match_extended_pattern(
 				line,
@@ -229,6 +243,7 @@ initial_line_tokens_match(
 				&extended_pattern,
 				prefix_pattern,
 				prefix_pattern_end,
+				recursion_limit - 1,
 				0
 				);
 		}
@@ -243,12 +258,15 @@ initial_line_tokens_match(
 				prefix_pattern[0] == '*'
 				)
 				++prefix_pattern;
+			if (!recursion_limit)
+				return false;
 			for (;; ++line) {
 				if (initial_line_tokens_match(
 					line,
 					line_end,
 					prefix_pattern,
-					prefix_pattern_end
+					prefix_pattern_end,
+					recursion_limit - 1
 					))
 					return true;
 				if (is_end_of_line_or_token(line, line_end))
@@ -348,12 +366,14 @@ initial_line_tokens_match(
 static bool
 initial_first_line_tokens_match(
 	char const *const lines,
-	char const *const prefix_pattern
+	char const *const prefix_pattern,
+	unsigned const recursion_limit
 	) {
 	return initial_line_tokens_match(
 		lines,
 		lines + strcspn(lines, "\n"),
 		prefix_pattern,
-		prefix_pattern + strlen(prefix_pattern)
+		prefix_pattern + strlen(prefix_pattern),
+		recursion_limit
 		);
 }

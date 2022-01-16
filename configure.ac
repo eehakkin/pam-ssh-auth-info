@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.69])
-AC_INIT([pam-ssh-auth-info], [1.2.20211208], [Eero+pam-ssh-auth-info@Häkkinen.fi], [], [https://github.Eero.Häkkinen.fi/pam-ssh-auth-info/])
+AC_INIT([pam-ssh-auth-info], [1.4.20220116], [Eero+pam-ssh-auth-info@Häkkinen.fi], [], [https://github.Eero.Häkkinen.fi/pam-ssh-auth-info/])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([line_tokens_match.h])
@@ -10,7 +10,7 @@ AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 # Checks for programs.
 AC_PROG_CC
 AM_PROG_AR
-LT_INIT
+LT_INIT([disable-static])
 
 # Checks for libraries.
 AC_CHECK_LIB([pam], [pam_get_item], [], [exit 1])

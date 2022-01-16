@@ -1,3 +1,9 @@
+pam-ssh-auth-info (1.4.20220116) unstable; urgency=low
+
+  * Added recursion limit.
+
+ -- Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>  Sun, 16 Jan 2022 16:12:38 +0200
+
 pam-ssh-auth-info (1.2.20211208) unstable; urgency=low
 
   * Added a missing libpam-dev build dependency (closes: GH-2).

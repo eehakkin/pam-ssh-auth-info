@@ -254,6 +254,7 @@ struct {
 
 int
 main() {
+	unsigned const recursion_limit = 25u;
 	for (int i = 0; test_data[i].lines; ++i) {
 		char const *const lines = test_data[i].lines;
 		for (int j = 0; test_data[i].pattern_data[j].pattern; ++j) {
@@ -266,17 +267,19 @@ main() {
 			assert(!lines[m+n]);
 			bool const actual = initial_first_line_tokens_match(
 				lines,
-				pattern
+				pattern,
+				recursion_limit
 				);
 			fprintf(
 				stderr,
 				"initial_first_line_tokens_match"
-				"(\"%.*s%.*s\", \"%s\") %s %s\n",
+				"(\"%.*s%.*s\", \"%s\", %u) %s %s\n",
 				(int)m,
 				lines,
 				2 * (int)n,
 				"\\n",
 				pattern,
+				recursion_limit,
 				actual == expected ? "==" : "!=",
 				expected ? "true" : "false"
 				);

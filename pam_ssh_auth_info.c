@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+ * Copyright © 2021 - 2022 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License version 3
@@ -25,6 +25,7 @@
 #define PAM_SM_PASSWORD
 
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <syslog.h>
@@ -85,6 +86,7 @@ pam_sm_authenticate(
 	char const *enable = NULL;
 	bool quiet_fail = false;
 	bool quiet_success = false;
+	unsigned recursion_limit = 100u;
 	for (; argc > 0; --argc, ++argv) {
 		if (strcmp(*argv, "all") == 0)
 			any = false;
@@ -102,6 +104,8 @@ pam_sm_authenticate(
 			quiet_fail = true;
 		else if (strcmp(*argv, "quiet_success") == 0)
 			quiet_success = true;
+		else if (strncmp(*argv, "recursion_limit=", 16) == 0)
+			recursion_limit = strtoul(*argv + 16, NULL, 0);
 		else
 			break;
 	}
@@ -166,7 +170,11 @@ pam_sm_authenticate(
 	bool matches = !any;
 	for (; argc > 0; --argc, ++argv) {
 		for (char const *s = ssh_auth_info; *s; s = next_line(s)) {
-			matches = initial_first_line_tokens_match(s, *argv);
+			matches = initial_first_line_tokens_match(
+				s,
+				*argv,
+				recursion_limit
+				);
 			if (debug)
 				pam_syslog(
 					pamh,
