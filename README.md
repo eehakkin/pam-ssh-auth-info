@@ -4,8 +4,8 @@
 
 The pam_ssh_auth_info.so PAM module is designed to succeed or fail
 authentication based on SSH authentication information consisting of a
-list of completed authentication methods and public credentials (e.g.
-keys) used to authenticate the user.
+list of successfully completed authentication methods and public
+credentials (e.g. keys) used to authenticate the user.
 One use is to select whether to load other modules based on this test.
 
 ## Requirements
@@ -55,9 +55,9 @@ defaults):
     **keyboard-interactive:pam**) or must not be set
   - should contain a comma separated list of authentication method names
     with **keyboard-interactive** (or **keyboard-interactive:pam**) as
-    the last list item so that there are completed authentication
-    methods and public credentials (e.g. keys) during the PAM
-    authentication, for example
+    the last list item so that there are successfully completed
+    authentication methods and public credentials (e.g. keys) during
+    the PAM authentication, for example
     ```
     AuthenticationMethods publickey,keyboard-interactive
     ```
@@ -86,8 +86,9 @@ or such (either explicitly or via defaults):
   - must contain **password** (or **password:pam**) or must not be set
   - should contain a comma separated list of authentication method names
     with **password** (or **password:pam**) as the last list item so
-    that there are completed authentication methods and public
-    credentials (e.g. keys) during the PAM authentication, for example
+    that there are successfully completed authentication methods and
+    public credentials (e.g. keys) during the PAM authentication, for
+    example
     ```
     AuthenticationMethods publickey,password
     ```

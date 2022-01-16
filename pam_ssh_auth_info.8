@@ -32,15 +32,23 @@ The pam_ssh_auth_info.so PAM module is designed
 to succeed or fail authentication
 based on SSH authentication information
 consisting of a list of
-completed authentication methods and
+successfully completed authentication methods and
 public credentials (e.g. keys)
 used to authenticate the user.
 One use is to select whether to load other modules based on this test.
 
-The module should be given one or more patterns as module arguments, and
+Normally,
+the module should be given one or more patterns as module arguments, and
 authentication will succeed
 if SSH authentication information matches all of the patterns
 (or any of the patterns depending on the options).
+If zero patterns are given as module arguments,
+authentication will succeed
+if SSH authentication information is available.
+If there are no previous successfully completed authentication methods,
+SSH authentication information
+is not available but missing and
+does not match any pattern.
 
 .SH "OPTIONS"
 .PP
@@ -121,24 +129,24 @@ Preserves the literal meaning of the following character byte.
 The extended patterns have the following meanings:
 .TP
 .BI "?(" pattern "|" pattern "|" \fR... ")"
-Matches one or zero occurence of the given patterns.
+Matches zero or one occurence of the given patterns.
 Does not match a word separator (space).
 .TP
 .BI "*(" pattern "|" pattern "|" \fR... ")"
-Matches zero or more occurence of the given patterns.
+Matches zero or more occurences of the given patterns.
 Does not match a word separator (space).
 .TP
 .BI "+(" pattern "|" pattern "|" \fR... ")"
-Matches one or more occurence of the given patterns.
+Matches one or more occurences of the given patterns.
 Does not match a word separator (space).
 .TP
 .BI "@(" pattern "|" pattern "|" \fR... ")"
-Matches one of the given token patterns.
+Matches one of the given patterns.
 Does not match a word separator (space).
 .TP
 .BI "!(" pattern "|" pattern "|" \fR... ")"
-Matches anything except one of the given token patterns or
-a token separator (space).
+Matches anything except one of the given patterns or
+a word separator (space).
 .PP
 SSH authentication information consists of lines having a format like
 .IP
@@ -178,7 +186,7 @@ but load a password module rule
 (to request and check the user password)
 only
 if there are
-no previous successful authentications
+no previous successfully completed authentications
 (in which case SSH authentication information is missing):
 .IP
 .EX
@@ -193,7 +201,7 @@ Load an OATH module rule
 (to request and check a one-time password)
 only
 if there are
-no previous successful
+no previous successfully completed
 FIDO authenticator algorithm based
 public key authentications
 (in which case SSH authentication information either
@@ -213,7 +221,7 @@ auth  required          password-module.so try_first_pass option...
 .EE
 .PP
 Require that there is
-at least one previous successful
+at least one previous successfully completed
 FIDO authenticator algorithm based
 public key authentication
 (in which case
@@ -229,14 +237,14 @@ auth  requisite  pam_ssh_auth_info.so quiet \\
 .EE
 .PP
 Require that there is
-at least one previous successful
+at least one previous successfully completed
 FIDO authenticator algorithm based
 public key authentication
 (in which case
 the key type
 contains \(lqsk-\(rq and
 ends with \(lq@openssh.com\(rq) and
-at least one previous successful
+at least one previous successfully completed
 non-FIDO
 public key authentication
 (in which case
@@ -255,7 +263,7 @@ auth  requisite  pam_ssh_auth_info.so quiet \\
 .B SSH_AUTH_INFO_0
 SSH authentication information
 consisting of a list of
-completed authentication methods and
+successfully completed authentication methods and
 public credentials (e.g. keys)
 used to authenticate the user.
 This information is provided
