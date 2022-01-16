@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+ * Copyright © 2021 - 2022 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License version 3
@@ -25,14 +25,14 @@ find_in_pattern(
 	);
 
 struct character_class_info {
-	bool negation;
 	char const *begin;
 	char const *end;
+	bool negation;
 };
 
 static bool
 is_character_class(
-	char const *pattern,
+	char const *const pattern,
 	char const *const pattern_end,
 	struct character_class_info *info
 	) {
@@ -41,31 +41,33 @@ is_character_class(
 	if (pattern[0] != '[')
 		return false;
 	if (pattern[1] == '!') {  /* [!...] */
-		info->negation = true;
 		info->begin = pattern + 2;
+		info->negation = true;
 	}
 	else {  /* [...] */
-		info->negation = false;
 		info->begin = pattern + 1;
+		info->negation = false;
 	}
 	info->end = memchr(
 		info->begin + 1,
 		']',
-		(size_t)(pattern_end - info->begin - 1)
+		(size_t)(pattern_end - (info->begin + 1))
 		);
 	return info->end != NULL;
 }
 
 struct extended_pattern_info {
-	unsigned min;
-	unsigned max;
-	char const *list;
-	char const *list_end;
+	char const *begin;
+	char const *end;
+	struct {
+		unsigned min;
+		unsigned max;
+	} count;
 };
 
 static bool
 is_extended_pattern(
-	char const *pattern,
+	char const *const pattern,
 	char const *const pattern_end,
 	struct extended_pattern_info *info
 	) {
@@ -73,31 +75,31 @@ is_extended_pattern(
 		return false;
 	switch (pattern[0]) {
 	case '?':  /* zero or one occurence */
-		info->min = 0u;
-		info->max = 1u;
+		info->count.min = 0u;
+		info->count.max = 1u;
 		break;
 	case '*':  /* zero or more occurences */
-		info->min = 0u;
-		info->max = ~0u;
+		info->count.min = 0u;
+		info->count.max = ~0u;
 		break;
 	case '+':  /* one or more occurences */
-		info->min = 1u;
-		info->max = ~0u;
+		info->count.min = 1u;
+		info->count.max = ~0u;
 		break;
 	case '@':  /* one occurence */
-		info->min = info->max = 1u;
+		info->count.min = info->count.max = 1u;
 		break;
 	case '!':  /* anything except one occurence */
-		info->min = info->max = 0u;
+		info->count.min = info->count.max = 0u;
 		break;
 	default:
 		return false;
 	}
 	if (pattern[1] != '(')
 		return false;
-	info->list = pattern + 2;
-	info->list_end = find_in_pattern(info->list, pattern_end, ')');
-	return info->list_end != NULL;
+	info->begin = pattern + 2;
+	info->end = find_in_pattern(info->begin, pattern_end, ')');
+	return info->end != NULL;
 }
 
 static char const *
@@ -119,7 +121,7 @@ find_in_pattern(
 			pattern_end,
 			&extended_pattern
 			))
-			pattern = extended_pattern.list_end;
+			pattern = extended_pattern.end;
 		else if (is_character_class(
 			pattern,
 			pattern_end,

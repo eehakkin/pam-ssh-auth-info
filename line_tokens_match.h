@@ -119,7 +119,7 @@ initial_line_tokens_match_extended_pattern(
 	unsigned const count
 	) {
 	char const *line_tail;
-	if (info->max == 0) {  /* !(...) */
+	if (info->count.max == 0) {  /* !(...) */
 		/* Try to split the line to a head and a tail so that
 		 *  1) the line head is a token or a token prefix
 		 *     (does not contain a space),
@@ -132,8 +132,8 @@ initial_line_tokens_match_extended_pattern(
 				!initial_line_tokens_match_pattern_list(
 					line,
 					line_tail,
-					info->list,
-					info->list_end
+					info->begin,
+					info->end
 					) &&
 				initial_line_tokens_match(
 					line_tail,
@@ -149,7 +149,7 @@ initial_line_tokens_match_extended_pattern(
 	}
 	else {
 		if (
-			count >= info->min &&
+			count >= info->count.min &&
 			initial_line_tokens_match(
 				line,
 				line_end,
@@ -162,7 +162,7 @@ initial_line_tokens_match_extended_pattern(
 			 * pattern.
 			 */
 			return true;
-		if (count >= info->max)
+		if (count >= info->count.max)
 			/* No more occurences can be found.
 			 */
 			return false;
@@ -175,7 +175,7 @@ initial_line_tokens_match_extended_pattern(
 		 *     increased occurence count.
 		 */
 		line_tail = line;
-		if (count >= info->min) {
+		if (count >= info->count.min) {
 			/* Enough occurences have been found
 			 * thus skip empty occurences as they would not change
 			 * anything.
@@ -189,8 +189,8 @@ initial_line_tokens_match_extended_pattern(
 				initial_line_tokens_match_pattern_list(
 					line,
 					line_tail,
-					info->list,
-					info->list_end
+					info->begin,
+					info->end
 					) &&
 				initial_line_tokens_match_extended_pattern(
 					line_tail,
@@ -223,7 +223,7 @@ initial_line_tokens_match(
 			prefix_pattern_end,
 			&extended_pattern
 			)) {
-			prefix_pattern = extended_pattern.list_end + 1;
+			prefix_pattern = extended_pattern.end + 1;
 			return initial_line_tokens_match_extended_pattern(
 				line,
 				line_end,
