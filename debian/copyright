@@ -3,16 +3,17 @@ Source: https://git.dev.Eero.xn--Hkkinen-5wa.fi/users/eero/pam-ssh-auth-info.git
 
 Files: *
 Copyright: 2021 - 2022 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
-License: GPL-3
+License: GPL-3+
 
 Files: pam_*.c *.h
 Copyright: 2021 - 2022 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
-License: LGPL-3
+License: LGPL-3+
 
-License: GPL-3
+License: GPL-3+
  This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License version 3
- as published by the Free Software Foundation.
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
  .
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -26,10 +27,11 @@ License: GPL-3
  License version 3 can be found in the file
  `/usr/share/common-licenses/GPL-3'.
 
-License: LGPL-3
+License: LGPL-3+
  This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Lesser General Public License version 3
- as published by the Free Software Foundation.
+ it under the terms of the GNU Lesser General Public License as
+ published by the Free Software Foundation, either version 3 of
+ the License, or (at your option) any later version.
  .
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
