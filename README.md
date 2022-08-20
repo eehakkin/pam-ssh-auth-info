@@ -40,32 +40,36 @@ the right directory.
 ## SSH Server Configuration
 
 It is possible to enable PAM authentication in SSH server using
-keyboard interactive challenge response authentication or
+keyboard-interactive challenge-response authentication or
 password authentication.
 
-### Keyboard Interactive Authentication
+### Keyboard-Interactive Authentication
 
-In order to enable PAM authentication using keyboard interactive
-challenge response authentication, the following SSH server options must
+In order to enable PAM authentication using keyboard-interactive
+challenge-response authentication, the following SSH server options must
 be set in **/etc/ssh/sshd_config** or such (either explicitly or via
 defaults):
 
 * AuthenticationMethods
   - must contain **keyboard-interactive** (or
     **keyboard-interactive:pam**) or must not be set
-  - should contain a comma separated list of authentication method names
+  - should contain comma-separated lists of authentication method names
     with **keyboard-interactive** (or **keyboard-interactive:pam**) as
-    the last list item so that there are successfully completed
+    the last list items so that there are successfully completed
     authentication methods and public credentials (e.g. keys) during
     the PAM authentication, for example
     ```
     AuthenticationMethods publickey,keyboard-interactive
     ```
-    for mandatory public key authentication or
+    for mandatory public key authentication and
+    mandatory PAM authentication
+    using keyboard-interactive challenge-response authentication or
     ```
     AuthenticationMethods publickey,keyboard-interactive keyboard-interactive
     ```
-    for optional public key authentication
+    for optional public key authentication and
+    mandatory PAM authentication
+    using keyboard-interactive challenge-response authentication
 * ChallengeResponseAuthentication yes
   - Before OpenSSH version 8.7p1, **ChallengeResponseAuthentication
     yes** was needed for **KbdInteractiveAuthentication yes** to have an
@@ -84,19 +88,21 @@ or such (either explicitly or via defaults):
 
 * AuthenticationMethods
   - must contain **password** (or **password:pam**) or must not be set
-  - should contain a comma separated list of authentication method names
-    with **password** (or **password:pam**) as the last list item so
+  - should contain comma-separated lists of authentication method names
+    with **password** (or **password:pam**) as the last list items so
     that there are successfully completed authentication methods and
     public credentials (e.g. keys) during the PAM authentication, for
     example
     ```
     AuthenticationMethods publickey,password
     ```
-    for mandatory public key authentication or
+    for mandatory public key authentication and
+    mandatory PAM authentication using password authentication or
     ```
     AuthenticationMethods publickey,password password
     ```
-    for optional public key authentication
+    for optional public key authentication and
+    mandatory PAM authentication using password authentication
 * PasswordAuthentication yes
 * UsePAM yes
 

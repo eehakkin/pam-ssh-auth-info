@@ -274,7 +274,7 @@ initial_line_tokens_match(
 			if (prefix_pattern == prefix_pattern_end)
 				/* An asterisk matches remaining token
 				 * character bytes to the end of the token and
-				 * and an empty prefix pattern matches there.
+				 * an empty prefix pattern matches there.
 				 */
 				return true;
 			if (!recursion_limit)

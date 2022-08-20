@@ -207,7 +207,7 @@ measure_pattern(
 					extended_pattern.count.min *
 					extended_pattern.match_len.min;
 				/* Ditto for the maximum,
-				 * but do not let it to overflow.
+				 * but do not let it overflow.
 				 */
 				if (
 					extended_pattern.count.max <=
@@ -239,7 +239,7 @@ measure_pattern(
 		}
 		++*min;
 		/* Ditto for the maximum,
-		 * but do not let it to overflow.
+		 * but do not let it overflow.
 		 */
 		if (*max != SIZE_MAX)
 			++*max;
