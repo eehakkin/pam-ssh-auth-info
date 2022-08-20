@@ -186,6 +186,10 @@ initial_line_tokens_match_extended_pattern(
 				 */
 				return false;
 		}
+		if (match_len > info->match_len.max)
+			/* No more matches can be found.
+			 */
+			return false;
 		if (
 			match_len >= info->match_len.min &&
 			(match_len || count < info->count.min) &&
