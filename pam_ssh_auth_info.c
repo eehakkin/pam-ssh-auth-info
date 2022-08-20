@@ -225,11 +225,7 @@ pam_sm_setcred(
 	int argc,
 	char const **argv
 	) {
-	(void)pamh;
-	(void)flags;
-	(void)argc;
-	(void)argv;
-	return PAM_IGNORE;
+	return pam_sm_authenticate(pamh, flags, argc, argv);
 }
 
 int

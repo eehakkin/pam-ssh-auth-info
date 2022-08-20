@@ -1,6 +1,9 @@
 pam-ssh-auth-info (1.6.20220820) unstable; urgency=medium
 
   * Changed license to GPL/LGPL-3+.
+  * Changed pam_sm_setcred to succeed or fail based on SSH
+    authentication information (instead of merely returning PAM_IGNORE
+    unconditionally).
 
  -- Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>  Sat, 20 Aug 2022 20:19:29 +0300
 
