@@ -210,9 +210,9 @@ measure_pattern(
 				 * but do not let it overflow.
 				 */
 				if (
-					extended_pattern.count.max <=
+					extended_pattern.match_len.max <=
 					(SIZE_MAX - *max) /
-					extended_pattern.match_len.max
+					extended_pattern.count.max
 					)
 					*max +=
 						extended_pattern.count.max *
