@@ -17,47 +17,46 @@
 
 #undef NDEBUG
 
-#include <assert.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
-#include "line_tokens_match.h"
 #include "line_tokens_match_test.h"
+#include "pattern.h"
 
 int
 main() {
-	unsigned const recursion_limit = 5u;
 	for (int i = 0; test_data[i].lines; ++i) {
-		char const *const lines = test_data[i].lines;
 		for (int j = 0; test_data[i].pattern_data[j].pattern; ++j) {
 			char const *const pattern =
 				test_data[i].pattern_data[j].pattern;
-			bool const expected =
-				test_data[i].pattern_data[j].expected;
-			size_t const m = strcspn(lines, "\n");
-			size_t const n = strspn(lines + m, "\n");
-			assert(n <= 1u);
-			assert(!lines[m+n]);
-			bool const actual = initial_first_line_tokens_match(
-				lines,
+			size_t const expected_min =
+				test_data[i].pattern_data[j].expected_min;
+			size_t const expected_max =
+				test_data[i].pattern_data[j].expected_max;
+			size_t actual_min, actual_max;
+			measure_pattern(
 				pattern,
-				recursion_limit
+				pattern + strlen(pattern),
+				&actual_min,
+				&actual_max
 				);
 			fprintf(
 				stderr,
-				"initial_first_line_tokens_match"
-				"(\"%.*s%.*s\", \"%s\", %u) %s %s\n",
-				(int)m,
-				lines,
-				2 * (int)n,
-				"\\n",
+				"measure_pattern(\"%s\", \"\", &min, &max)"
+				", min == %zu %s %zu"
+				", max == %zu %s %zu"
+				"\n",
 				pattern,
-				recursion_limit,
-				actual == expected ? "==" : "!=",
-				expected ? "true" : "false"
+				actual_min,
+				actual_min == expected_min ? "==" : "!=",
+				expected_min,
+				actual_max,
+				actual_max == expected_max ? "==" : "!=",
+				expected_max
 				);
-			if (actual != expected)
+			if (actual_min != expected_min)
+				return 1;
+			if (actual_max != expected_max)
 				return 1;
 		}
 	}
