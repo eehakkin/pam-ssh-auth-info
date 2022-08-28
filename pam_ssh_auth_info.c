@@ -81,10 +81,14 @@ pam_sm_authenticate(
 	(void)flags;
 	/* Parse options.
 	 */
-	bool any = false;
 	bool debug = false;
 	char const *disable = NULL;
 	char const *enable = NULL;
+	enum {
+		MATCH_ALL_OF,
+		MATCH_ANY_OF,
+		MATCH_NONE_OF
+	} match_style = MATCH_ALL_OF;
 	bool quiet_fail = false;
 	bool quiet_success = false;
 	unsigned recursion_limit = 100u;
@@ -93,18 +97,20 @@ pam_sm_authenticate(
 			strcmp(*argv + 3, "_of") == 0 ||
 			strcmp(*argv + 3, "") == 0
 			))
-			any = false;
+			match_style = MATCH_ALL_OF;
 		else if (strncmp(*argv, "any", 3) == 0 && (
 			strcmp(*argv + 3, "_of") == 0 ||
 			strcmp(*argv + 3, "") == 0
 			))
-			any = true;
+			match_style = MATCH_ANY_OF;
 		else if (strcmp(*argv, "debug") == 0)
 			debug = true;
 		else if (strncmp(*argv, "disable=", 8) == 0)
 			disable = *argv + 8;
 		else if (strncmp(*argv, "enable=", 7) == 0)
 			enable = *argv + 7;
+		else if (strcmp(*argv, "none_of") == 0)
+			match_style = MATCH_NONE_OF;
 		else if (strcmp(*argv, "quiet") == 0)
 			quiet_fail = quiet_success = true;
 		else if (strcmp(*argv, "quiet_fail") == 0)
@@ -174,8 +180,9 @@ pam_sm_authenticate(
 	}
 	/* Process SSH authentication information patterns.
 	 */
-	bool matches = !any;
+	bool success = match_style != MATCH_ANY_OF;
 	for (; argc > 0; --argc, ++argv) {
+		bool matches = false;
 		for (char const *s = ssh_auth_info; *s; s = next_line(s)) {
 			matches = initial_first_line_tokens_match(
 				s,
@@ -198,10 +205,26 @@ pam_sm_authenticate(
 			if (matches)
 				break;
 		}
-		if (matches == any)
+		switch (match_style) {
+		case MATCH_ALL_OF:
+			if (matches)
+				continue;
+			success = false;
 			break;
+		case MATCH_ANY_OF:
+			if (!matches)
+				continue;
+			success = true;
+			break;
+		case MATCH_NONE_OF:
+			if (!matches)
+				continue;
+			success = false;
+			break;
+		}
+		break;
 	}
-	if (!(matches ? quiet_success : quiet_fail)) {
+	if (!(success ? quiet_success : quiet_fail)) {
 		char const *user = NULL;
 		if (pam_get_item(
 			pamh,
@@ -217,11 +240,11 @@ pam_sm_authenticate(
 			argc ? " \"" : "",
 			argc ? *argv : "",
 			argc ? "\""  : "",
-			matches ? "met" : "not met",
+			success ? "met" : "not met",
 			user
 			);
 	}
-	return matches ? PAM_SUCCESS : PAM_AUTH_ERR;
+	return success ? PAM_SUCCESS : PAM_AUTH_ERR;
 }
 
 int

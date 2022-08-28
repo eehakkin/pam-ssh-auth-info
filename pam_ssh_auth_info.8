@@ -42,7 +42,7 @@ Normally,
 the module should be given zero or more patterns as module arguments, and
 authentication will succeed
 if SSH authentication information matches all of the patterns
-(or any of the patterns depending on the options).
+(or any of or none of the patterns depending on the options).
 If there are no previous successfully completed authentication methods,
 SSH authentication information
 is not available but missing and
@@ -76,6 +76,12 @@ listed in the colon separator service list.
 .IR \fBenable = service [: service [...]]
 Enable pattern matching only for the services
 listed in the colon separator service list.
+.TP
+.B none_of
+None of the \fIpattern\fRs may match.
+If zero \fIpattern\fRs are given as module arguments,
+authentication will succeed
+if SSH authentication information is available.
 .TP
 .B quiet
 Do not log failure or success messages to syslog.
@@ -172,7 +178,12 @@ the \fBauth\fR type is still undoubtedly the most useful one.
 .SH "RETURN VALUES"
 .TP
 .B PAM_AUTH_ERR
-SSH authentication information does not match the patterns.
+Pattern requirements are not met.
+SSH authentication information
+does not match all of or any of the patterns
+(see the \fBall_of\fR and the \fBany_of\fR options) or
+matches some of the patterns
+(see the \fBnone_of\fR option).
 .TP
 .B PAM_IGNORE
 The pattern matching is
@@ -181,7 +192,12 @@ not enabled for the service (see the \fBenable\fR option) or
 SSH authentication information is missing.
 .TP
 .B PAM_SUCCESS
-SSH authentication information matches the patterns.
+Pattern requirements are met.
+SSH authentication information
+matches all of or any of the patterns
+(see the \fBall_of\fR and the \fBany_of\fR options) or
+matches none of the patterns
+(see the \fBnone_of\fR option).
 
 .SH EXAMPLES
 .PP
