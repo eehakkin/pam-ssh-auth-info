@@ -89,9 +89,15 @@ pam_sm_authenticate(
 	bool quiet_success = false;
 	unsigned recursion_limit = 100u;
 	for (; argc > 0; --argc, ++argv) {
-		if (strcmp(*argv, "all") == 0)
+		if (strncmp(*argv, "all", 3) == 0 && (
+			strcmp(*argv + 3, "_of") == 0 ||
+			strcmp(*argv + 3, "") == 0
+			))
 			any = false;
-		else if (strcmp(*argv, "any") == 0)
+		else if (strncmp(*argv, "any", 3) == 0 && (
+			strcmp(*argv + 3, "_of") == 0 ||
+			strcmp(*argv + 3, "") == 0
+			))
 			any = true;
 		else if (strcmp(*argv, "debug") == 0)
 			debug = true;

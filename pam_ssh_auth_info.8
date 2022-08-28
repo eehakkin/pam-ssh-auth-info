@@ -39,28 +39,32 @@ used to authenticate the user.
 One use is to select whether to load other modules based on this test.
 
 Normally,
-the module should be given one or more patterns as module arguments, and
+the module should be given zero or more patterns as module arguments, and
 authentication will succeed
 if SSH authentication information matches all of the patterns
 (or any of the patterns depending on the options).
-If zero patterns are given as module arguments,
-authentication will succeed
-if SSH authentication information is available.
 If there are no previous successfully completed authentication methods,
 SSH authentication information
 is not available but missing and
-does not match any pattern.
+authentication will neither succeed nor fail
+(the module will return \fBPAM_IGNORE\fR).
 
 .SH "OPTIONS"
 .PP
 The following \fIflag\fRs are supported:
 .TP
-.B all
-All \fIpattern\fRs must match.
+.B all_of
+All of the \fIpattern\fRs must match.
+If zero \fIpattern\fRs are given as module arguments,
+authentication will succeed
+if SSH authentication information is available.
 This is the default.
 .TP
-.B any
-At least one \fIpattern\fR must match.
+.B any_of
+At least one of the \fIpattern\fRs must match.
+If zero \fIpattern\fRs are given as module arguments,
+authentication will fail
+if SSH authentication information is available.
 .TP
 .B debug
 Log debugging messages to syslog.

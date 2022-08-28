@@ -5,6 +5,7 @@ pam-ssh-auth-info (1.6.20220828) unstable; urgency=medium
     authentication information (instead of merely returning PAM_IGNORE
     unconditionally).
   * Fixed crash on empty extended patterns.
+  * Preferred all_of/any_of options over all/any options.
 
  -- Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>  Sun, 28 Aug 2022 17:13:10 +0300
 
