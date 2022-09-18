@@ -1,4 +1,4 @@
-pam-ssh-auth-info (1.6.20220828) unstable; urgency=medium
+pam-ssh-auth-info (1.6.20220918) unstable; urgency=medium
 
   * Changed license to GPL/LGPL-3+.
   * Changed pam_sm_setcred to succeed or fail based on SSH
@@ -7,8 +7,9 @@ pam-ssh-auth-info (1.6.20220828) unstable; urgency=medium
   * Fixed crash on empty extended patterns.
   * Preferred all_of/any_of options over all/any options.
   * Added support for the none_of option.
+  * Improved documentation.
 
- -- Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>  Sun, 28 Aug 2022 17:13:10 +0300
+ -- Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>  Sun, 18 Sep 2022 20:03:04 +0300
 
 pam-ssh-auth-info (1.4.20220116) unstable; urgency=low
 
