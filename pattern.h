@@ -93,6 +93,8 @@ is_extended_pattern(
 	) {
 	if (pattern_end - pattern < 3)
 		return false;
+	if (pattern[1] != '(')
+		return false;
 	switch (pattern[0]) {
 	case '?':  /* zero or one occurence */
 		info->count.min = 0u;
@@ -115,8 +117,6 @@ is_extended_pattern(
 	default:
 		return false;
 	}
-	if (pattern[1] != '(')
-		return false;
 	info->begin = pattern + 2;
 	info->end = find_in_pattern(info->begin, pattern_end, ')', NULL);
 	if (!info->end)
