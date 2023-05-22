@@ -13,7 +13,7 @@ pam_LTLIBRARIES			= pam_ssh_auth_info.la
 
 line_tokens_match_SOURCES	= \
 	line_tokens_match.h \
-	$(pattern_SOURCES)
+	$(tokens_match_SOURCES)
 line_tokens_match_test_SOURCES	= \
 	line_tokens_match_test.c \
 	line_tokens_match_test.h \
@@ -30,4 +30,7 @@ pattern_SOURCES			= \
 pattern_test_SOURCES		= \
 	line_tokens_match_test.h \
 	pattern_test.c \
+	$(pattern_SOURCES)
+tokens_match_SOURCES		= \
+	tokens_match.h \
 	$(pattern_SOURCES)
