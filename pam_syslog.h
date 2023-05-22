@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+ * Copyright © 2021 - 2023 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <syslog.h>
 
-#ifndef HAVE_PAM_SYSLOG
+#if !defined(HAVE_PAM_SYSLOG) && defined(PACKAGE_NAME)
 static void
 pam_syslog(pam_handle_t *pamh, int priority, char const *format, ...) {
 	char buffer[1024];

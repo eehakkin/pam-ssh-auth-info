@@ -33,13 +33,13 @@
 
 #include <syslog.h>
 
-#ifdef HAVE_SECURITY_PAM_APPL_H
+#if defined(HAVE_SECURITY_PAM_APPL_H) || !defined(PACKAGE_NAME)
 #	include <security/pam_appl.h>
 #endif
-#ifdef HAVE_SECURITY_PAM_EXT_H
+#if defined(HAVE_SECURITY_PAM_EXT_H) || !defined(PACKAGE_NAME)
 #	include <security/pam_ext.h>
 #endif
-#ifdef HAVE_SECURITY_PAM_MODULES_H
+#if defined(HAVE_SECURITY_PAM_MODULES_H) || !defined(PACKAGE_NAME)
 #	include <security/pam_modules.h>
 #endif
 
