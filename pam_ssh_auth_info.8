@@ -1,4 +1,4 @@
-\" Copyright © 2021 - 2022 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+\" Copyright © 2021 - 2023 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
 \"
 \" This manual page is free software: you can redistribute it and/or modify
 \" it under the terms of the GNU General Public License as published by
@@ -156,8 +156,8 @@ Matches one of the given patterns.
 Does not match a word separator (space).
 .TP
 .BI "!(" pattern "|" pattern "|" \fR... ")"
-Matches anything except one of the given patterns or
-a word separator (space).
+Matches anything except one occurence of the given patterns.
+Does not match a word separator (space).
 .PP
 SSH authentication information consists of lines having a format like
 .IP
@@ -214,7 +214,7 @@ no previous successfully completed authentications
 auth  requisite         oath-module.so option...
 auth  [success=1        \\
        default=ignore]  pam_ssh_auth_info.so
-auth  required          password-module.so try_first_pas option...
+auth  required          password-module.so try_first_pass option...
 .EE
 .PP
 Load an OATH module rule

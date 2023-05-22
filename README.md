@@ -70,14 +70,10 @@ defaults):
     for optional public key authentication and
     mandatory PAM authentication
     using keyboard-interactive challenge-response authentication
-* ChallengeResponseAuthentication yes
-  - Before OpenSSH version 8.7p1, **ChallengeResponseAuthentication
+* KbdInteractiveAuthentication yes
+  - NOTE: Before OpenSSH version 8.7p1, **ChallengeResponseAuthentication
     yes** was needed for **KbdInteractiveAuthentication yes** to have an
     effect.
-  - Since OpenSSH version 8.7p1, **ChallengeResponseAuthentication yes**
-    is a deprecated alias for **KbdInteractiveAuthentication yes**. It
-    is still allowed but not needed anymore.
-* KbdInteractiveAuthentication yes
 * UsePAM yes
 
 ### Password Authentication
