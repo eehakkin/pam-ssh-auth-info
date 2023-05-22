@@ -23,6 +23,7 @@
 #include "pattern.h"
 
 struct tokens_match_config {
+	bool allow_prefix_match;
 	struct {
 		struct tokens_match_config_set {
 			size_t len;
@@ -65,7 +66,7 @@ is_end_of_token(
 	return tokens >= tokens_end || is_token_separator(config, *tokens);
 }
 
-/* Check if the initial tokens match the pattern.
+/* Check if the tokens match the pattern.
  *
  * Any character byte that appears in a pattern, other than the extended
  * patterns and the special pattern characters described below and the pattern
@@ -105,61 +106,62 @@ is_end_of_token(
  *                          Does not match a token separator.
  */
 static bool
-initial_tokens_match(
+tokens_match(
 	struct tokens_match_config const *const config,
 	char const *tokens,
 	char const *const tokens_end,
-	char const *prefix_pattern,
-	char const *const prefix_pattern_end,
+	char const *pattern,
+	char const *const pattern_end,
 	unsigned const recursion_limit
 	);
 
 static bool
-initial_token_match_pattern_list(
+token_match_pattern_list(
 	char const *const token,
 	char const *const token_end,
-	char const *const prefix_pattern_list,
-	char const *const prefix_pattern_list_end,
+	char const *const pattern_list,
+	char const *const pattern_list_end,
 	unsigned const recursion_limit
 	) {
 	/* The token does not contain separators.
 	 * Therefore, a zero config is enough.
 	 */
 	static struct tokens_match_config const config = {
+		false,
 		{{0, ""}, {0, ""}}
 	};
-	char const *prefix_pattern = prefix_pattern_list;
+	char const *pattern = pattern_list;
 	for (;;) {
-		char const *prefix_pattern_end = find_in_pattern(
-			prefix_pattern,
-			prefix_pattern_list_end,
+		char const *pattern_end = find_in_pattern(
+			pattern,
+			pattern_list_end,
 			'|',
-			prefix_pattern_list_end
+			pattern_list_end
 			);
-		if (initial_tokens_match(
+		if (tokens_match(
 			&config,
 			token,
 			token_end,
-			prefix_pattern,
-			prefix_pattern_end,
+			pattern,
+			pattern_end,
 			recursion_limit
 			))
 			return true;
-		if (prefix_pattern_end == prefix_pattern_list_end)
+		if (pattern_end == pattern_list_end)
 			break;
-		prefix_pattern = prefix_pattern_end + 1;
+		pattern = pattern_end + 1;
 	}
 	return false;
 }
 
 static bool
-initial_tokens_match_extended_pattern(
+tokens_match_extended_pattern(
 	struct tokens_match_config const *const config,
 	char const *tokens,
 	char const *const tokens_end,
 	struct extended_pattern_info const *const info,
-	char const *const prefix_pattern,
-	char const *const prefix_pattern_end,
+	char const *const pattern,
+	char const *const pattern_end,
 	unsigned const recursion_limit,
 	unsigned count
 	) {
@@ -170,23 +172,23 @@ initial_tokens_match_extended_pattern(
 		 *     (does not contain a token separator),
 		 *  2) the tokens head does not match any of the patterns in
 		 *     the extended pattern and
-		 *  3) the tokens tail matches the rest of the prefix pattern.
+		 *  3) the tokens tail matches the rest of the pattern.
 		 */
 		for (tokens_tail = tokens;; ++tokens_tail) {
 			if (
-				!initial_token_match_pattern_list(
+				!token_match_pattern_list(
 					tokens,
 					tokens_tail,
 					info->begin,
 					info->end,
 					recursion_limit
 					) &&
-				initial_tokens_match(
+				tokens_match(
 					config,
 					tokens_tail,
 					tokens_end,
-					prefix_pattern,
-					prefix_pattern_end,
+					pattern,
+					pattern_end,
 					recursion_limit
 					)
 				)
@@ -196,7 +198,7 @@ initial_tokens_match_extended_pattern(
 		}
 	}
 	/* If there are not enough occurences or
-	 * if the tokens do not match the rest of the prefix pattern,
+	 * if the tokens do not match the rest of the pattern,
 	 * try to split the tokens to a head and a tail so that
 	 *  1) the tokens head is a token or a token prefix
 	 *     (does not contain a token separator),
@@ -210,18 +212,17 @@ initial_tokens_match_extended_pattern(
 		if (tokens_tail == tokens) {
 			if (
 				count >= info->count.min &&
-				initial_tokens_match(
+				tokens_match(
 					config,
 					tokens,
 					tokens_end,
-					prefix_pattern,
-					prefix_pattern_end,
+					pattern,
+					pattern_end,
 					recursion_limit
 					)
 				)
 				/* There are enough occurences and
-				 * the tokens match the rest of
-				 * the prefix pattern.
+				 * the tokens match the rest of the pattern.
 				 */
 				return true;
 			if (count >= info->count.max)
@@ -236,7 +237,7 @@ initial_tokens_match_extended_pattern(
 		if (
 			match_len >= info->match_len.min &&
 			(match_len || count < info->count.min) &&
-			initial_token_match_pattern_list(
+			token_match_pattern_list(
 				tokens,
 				tokens_tail,
 				info->begin,
@@ -257,13 +258,13 @@ initial_tokens_match_extended_pattern(
 			}
 			if (
 				recursion_limit &&
-				initial_tokens_match_extended_pattern(
+				tokens_match_extended_pattern(
 					config,
 					tokens_tail,
 					tokens_end,
 					info,
-					prefix_pattern,
-					prefix_pattern_end,
+					pattern,
+					pattern_end,
 					recursion_limit - 1,
 					count + 1
 					)
@@ -280,61 +281,70 @@ initial_tokens_match_extended_pattern(
 }
 
 static bool
-initial_tokens_match(
+tokens_match(
 	struct tokens_match_config const *const config,
 	char const *tokens,
 	char const *const tokens_end,
-	char const *prefix_pattern,
-	char const *const prefix_pattern_end,
+	char const *pattern,
+	char const *const pattern_end,
 	unsigned const recursion_limit
 	) {
-	for (; prefix_pattern < prefix_pattern_end; ++prefix_pattern) {
+	for (; pattern < pattern_end; ++pattern) {
 		struct character_class_info character_class;
 		struct extended_pattern_info extended_pattern;
 		if (is_extended_pattern(
-			prefix_pattern,
-			prefix_pattern_end,
+			pattern,
+			pattern_end,
 			&extended_pattern
 			)) {
 			if (!recursion_limit)
 				return false;
-			prefix_pattern = extended_pattern.end + 1;
-			return initial_tokens_match_extended_pattern(
+			pattern = extended_pattern.end + 1;
+			return tokens_match_extended_pattern(
 				config,
 				tokens,
 				tokens_end,
 				&extended_pattern,
-				prefix_pattern,
-				prefix_pattern_end,
+				pattern,
+				pattern_end,
 				recursion_limit - 1,
 				0
 				);
 		}
-		switch (prefix_pattern[0]) {
+		switch (pattern[0]) {
 		case '*':
 			/* An asterisk matches any number of (including zero)
 			 * token character bytes but not a token separator.
 			 */
-			while (
-				prefix_pattern < prefix_pattern_end &&
-				prefix_pattern[0] == '*'
-				)
-				++prefix_pattern;
-			if (prefix_pattern == prefix_pattern_end)
-				/* An asterisk matches remaining token
-				 * character bytes to the end of the token and
-				 * an empty prefix pattern matches there.
-				 */
+			while (pattern < pattern_end && pattern[0] == '*')
+				++pattern;
+			if (pattern == pattern_end) {
+				assert(tokens <= tokens_end);
+				if (config->allow_prefix_match)
+					/* An asterisk matches remaining token
+					 * character bytes to the end of
+					 * the token and an empty pattern
+					 * matches there.
+					 */
+					return true;
+				for (; tokens < tokens_end; ++tokens) {
+					if (is_token_separator(
+						config,
+						*tokens
+						))
+						return false;
+				}
 				return true;
+			}
 			if (!recursion_limit)
 				return false;
 			for (;; ++tokens) {
-				if (initial_tokens_match(
+				if (tokens_match(
 					config,
 					tokens,
 					tokens_end,
-					prefix_pattern,
-					prefix_pattern_end,
+					pattern,
+					pattern_end,
 					recursion_limit - 1
 					))
 					return true;
@@ -356,8 +366,8 @@ initial_tokens_match(
 			continue;
 		case '[':
 			if (!is_character_class(
-				prefix_pattern,
-				prefix_pattern_end,
+				pattern,
+				pattern_end,
 				&character_class
 				))
 				/* An opening bracket ([) without a matching
@@ -373,48 +383,45 @@ initial_tokens_match(
 			 */
 			if (is_end_of_token(config, tokens, tokens_end))
 				return false;
-			prefix_pattern = character_class.begin;
+			pattern = character_class.begin;
 			do {
-				if (
-					prefix_pattern[1] == '-' &&
-					prefix_pattern[2] != ']'
-					) {
+				if (pattern[1] == '-' && pattern[2] != ']') {
 					/* A character byte range.
 					 */
 					if (
-						*tokens >= prefix_pattern[0] &&
-						*tokens <= prefix_pattern[2]
+						*tokens >= pattern[0] &&
+						*tokens <= pattern[2]
 						)
 						break;
-					prefix_pattern += 3;
+					pattern += 3;
 				}
 				else {
 					/* A character byte.
 					 */
-					if (*tokens == prefix_pattern[0])
+					if (*tokens == pattern[0])
 						break;
-					++prefix_pattern;
+					++pattern;
 				}
-			} while (prefix_pattern < character_class.end);
-			assert(prefix_pattern <= character_class.end);
+			} while (pattern < character_class.end);
+			assert(pattern <= character_class.end);
 			if (
 				character_class.negation
-					? prefix_pattern < character_class.end
-					: prefix_pattern >= character_class.end
+					? pattern < character_class.end
+					: pattern >= character_class.end
 				)
 				return false;
-			prefix_pattern = character_class.end;
+			pattern = character_class.end;
 			++tokens;
 			continue;
 		case '\\':
 			/* A backslash preserves the literal meaning of
 			 * the following character byte.
 			 */
-			if (prefix_pattern_end - prefix_pattern >= 2)
-				++prefix_pattern;
+			if (pattern_end - pattern >= 2)
+				++pattern;
 			break;
 		default:
-			if (is_pattern_separator(config, prefix_pattern[0])) {
+			if (is_pattern_separator(config, pattern[0])) {
 				/* A pattern separator character byte matches
 				 * itself or a token separator character byte.
 				 */
@@ -422,7 +429,7 @@ initial_tokens_match(
 				if (tokens >= tokens_end)
 					return false;
 				if (!(
-					*tokens == prefix_pattern[0] ||
+					*tokens == pattern[0] ||
 					is_token_separator(config, *tokens)
 					))
 					return false;
@@ -433,12 +440,16 @@ initial_tokens_match(
 		assert(tokens <= tokens_end);
 		if (tokens >= tokens_end)
 			return false;
-		if (*tokens != prefix_pattern[0])
+		if (*tokens != pattern[0])
 			return false;
 		++tokens;
 	}
 	/* The end of the pattern.
-	 * Accept at the end of the tokens and at the end of a token.
 	 */
-	return is_end_of_token(config, tokens, tokens_end);
+	assert(tokens <= tokens_end);
+	if (tokens >= tokens_end)
+		return true;
+	if (config->allow_prefix_match && is_token_separator(config, *tokens))
+		return true;
+	return false;
 }

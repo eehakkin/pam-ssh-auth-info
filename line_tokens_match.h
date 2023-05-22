@@ -21,7 +21,7 @@
 
 #include "tokens_match.h"
 
-/* Check if the initial tokens on the line match the pattern.
+/* Check if the tokens on the line match the pattern.
  *
  * Any character byte that appears in a pattern, other than the extended
  * patterns and the special pattern characters described below, matches
@@ -58,37 +58,41 @@
  *                          patterns or a token separator (space).
  */
 static bool
-initial_line_tokens_match(
+line_tokens_match(
 	char const *line,
 	char const *const line_end,
-	char const *prefix_pattern,
-	char const *const prefix_pattern_end,
+	char const *pattern,
+	char const *const pattern_end,
+	bool const allow_prefix_match,
 	unsigned const recursion_limit
 	) {
 	struct tokens_match_config const config = {
+		allow_prefix_match,
 		{{1, "="}, {1, " "}}
 	};
-	return initial_tokens_match(
+	return tokens_match(
 		&config,
 		line,
 		line_end,
-		prefix_pattern,
-		prefix_pattern_end,
+		pattern,
+		pattern_end,
 		recursion_limit
 		);
 }
 
 static bool
-initial_first_line_tokens_match(
+first_line_tokens_match(
 	char const *const lines,
-	char const *const prefix_pattern,
+	char const *const pattern,
+	bool const allow_prefix_match,
 	unsigned const recursion_limit
 	) {
-	return initial_line_tokens_match(
+	return line_tokens_match(
 		lines,
 		lines + strcspn(lines, "\n"),
-		prefix_pattern,
-		prefix_pattern + strlen(prefix_pattern),
+		pattern,
+		pattern + strlen(pattern),
+		allow_prefix_match,
 		recursion_limit
 		);
 }

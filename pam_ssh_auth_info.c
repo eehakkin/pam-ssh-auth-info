@@ -186,9 +186,11 @@ pam_sm_authenticate(
 	for (; argc > 0; --argc, ++argv) {
 		bool matches = false;
 		for (char const *s = ssh_auth_info; *s; s = next_line(s)) {
-			matches = initial_first_line_tokens_match(
+			bool const allow_prefix_match = true;
+			matches = first_line_tokens_match(
 				s,
 				*argv,
+				allow_prefix_match,
 				recursion_limit
 				);
 			if (debug)

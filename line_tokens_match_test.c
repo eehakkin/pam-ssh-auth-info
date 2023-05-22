@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+ * Copyright © 2021 - 2023 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,32 +27,35 @@
 
 int
 main() {
+	bool const allow_prefix_match = true;
 	unsigned const recursion_limit = 6u;
 	for (int i = 0; test_data[i].lines; ++i) {
 		char const *const lines = test_data[i].lines;
+		size_t const m = strcspn(lines, "\n");
+		size_t const n = strspn(lines + m, "\n");
+		assert(n <= 1u);
+		assert(!lines[m+n]);
 		for (int j = 0; test_data[i].pattern_data[j].pattern; ++j) {
 			char const *const pattern =
 				test_data[i].pattern_data[j].pattern;
 			bool const expected =
 				test_data[i].pattern_data[j].expected;
-			size_t const m = strcspn(lines, "\n");
-			size_t const n = strspn(lines + m, "\n");
-			assert(n <= 1u);
-			assert(!lines[m+n]);
-			bool const actual = initial_first_line_tokens_match(
+			bool const actual = first_line_tokens_match(
 				lines,
 				pattern,
+				allow_prefix_match,
 				recursion_limit
 				);
 			fprintf(
 				stderr,
-				"initial_first_line_tokens_match"
-				"(\"%.*s%.*s\", \"%s\", %u) %s %s\n",
+				"first_line_tokens_match"
+				"(\"%.*s%.*s\", \"%s\", %s, %u) %s %s\n",
 				(int)m,
 				lines,
 				2 * (int)n,
 				"\\n",
 				pattern,
+				allow_prefix_match ? "true" : "false",
 				recursion_limit,
 				actual == expected ? "==" : "!=",
 				expected ? "true" : "false"
