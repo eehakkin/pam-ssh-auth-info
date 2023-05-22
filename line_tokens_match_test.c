@@ -27,7 +27,6 @@
 
 int
 main() {
-	bool const allow_prefix_match = true;
 	unsigned const recursion_limit = 6u;
 	for (int i = 0; test_data[i].lines; ++i) {
 		char const *const lines = test_data[i].lines;
@@ -38,30 +37,38 @@ main() {
 		for (int j = 0; test_data[i].pattern_data[j].pattern; ++j) {
 			char const *const pattern =
 				test_data[i].pattern_data[j].pattern;
-			bool const expected =
-				test_data[i].pattern_data[j].expected;
-			bool const actual = first_line_tokens_match(
-				lines,
-				pattern,
-				allow_prefix_match,
-				recursion_limit
-				);
-			fprintf(
-				stderr,
-				"first_line_tokens_match"
-				"(\"%.*s%.*s\", \"%s\", %s, %u) %s %s\n",
-				(int)m,
-				lines,
-				2 * (int)n,
-				"\\n",
-				pattern,
-				allow_prefix_match ? "true" : "false",
-				recursion_limit,
-				actual == expected ? "==" : "!=",
-				expected ? "true" : "false"
-				);
-			if (actual != expected)
-				return 1;
+			for (int k = 0; k < 2; ++k) {
+				bool const allow_prefix_match = (bool)k;
+				bool const expected =
+					(
+						allow_prefix_match ||
+						!test_data[i].pattern_data[j].allow_prefix_match
+						) &&
+					test_data[i].pattern_data[j].expected;
+				bool const actual = first_line_tokens_match(
+					lines,
+					pattern,
+					allow_prefix_match,
+					recursion_limit
+					);
+				fprintf(
+					stderr,
+					"first_line_tokens_match"
+					"(\"%.*s%.*s\", \"%s\", %s, %u)"
+					" %s %s\n",
+					(int)m,
+					lines,
+					2 * (int)n,
+					"\\n",
+					pattern,
+					allow_prefix_match ? "true" : "false",
+					recursion_limit,
+					actual == expected ? "==" : "!=",
+					expected ? "true" : "false"
+					);
+				if (actual != expected)
+					return 1;
+			}
 		}
 	}
 	fprintf(stderr, "OK\n");
