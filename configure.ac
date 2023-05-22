@@ -13,7 +13,7 @@ AM_PROG_AR
 LT_INIT([disable-static])
 
 # Checks for libraries.
-AC_CHECK_LIB([pam], [pam_get_item], [], [exit 1])
+AC_CHECK_LIB([pam], [pam_get_item], [], [AC_MSG_ERROR([cannot find -lpam])])
 
 # Checks for header files.
 AC_CHECK_HEADERS([security/pam_appl.h security/pam_ext.h security/pam_modules.h])
