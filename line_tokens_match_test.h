@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+ * Copyright © 2021 - 2023 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,21 +56,21 @@ struct {
 		{"[[]@(a)@(b)@(ccc)[]]", false, 7u, 7u},
 		{"[[]+(|a)+(|b)+(|c)+(d)[]]", false, 3u, MAX(2u + 4u * (size_t)UINT_MAX, UINT_MAX)},
 		{"[[]!(|*b*|*c*)!(|*b*)!(|*a*|*b*)[]]", false, 2u, SIZE_MAX},
-		{NULL}
+		{NULL, false, 0u, 0u}
 	}},
 	{"\\", {
 		{"[\\]", true, 1u, 1u},
 		{"\\\\", true, 1u, 1u},
 		{"\\", true, 1u, 1u},
 		{"[!\\]", false, 1u, 1u},
-		{NULL}
+		{NULL, false, 0u, 0u}
 	}},
 	{"\\-", {
 		{"[\\]-", true, 2u, 2u},
 		{"\\\\-", true, 2u, 2u},
 		{"\\-", false, 1u, 1u},
 		{"[!\\]-", false, 2u, 2u},
-		{NULL}
+		{NULL, false, 0u, 0u}
 	}},
 	/* The first line is empty.
 	 */
@@ -83,7 +83,7 @@ struct {
 		{"*?", false, 1u, SIZE_MAX},
 		{"?", false, 1u, 1u},
 		{"?*", false, 1u, SIZE_MAX},
-		{NULL}
+		{NULL, false, 0u, 0u}
 	}},
 	/* The first line is empty.
 	 */
@@ -96,7 +96,7 @@ struct {
 		{"*?", false, 1u, SIZE_MAX},
 		{"?", false, 1u, 1u},
 		{"?*", false, 1u, SIZE_MAX},
-		{NULL}
+		{NULL, false, 0u, 0u}
 	}},
 	/* The first line consists of one token.
 	 */
@@ -138,7 +138,7 @@ struct {
 		{"method*?", false, 7u, SIZE_MAX},
 		{"method?", false, 7u, 7u},
 		{"method?*", false, 7u, SIZE_MAX},
-		{NULL}
+		{NULL, false, 0u, 0u}
 	}},
 	/* The first line consists of three tokens.
 	 */
@@ -251,7 +251,7 @@ struct {
 		{"method=key-type=abcdef==*?", false, 25u, SIZE_MAX},
 		{"method=key-type=abcdef==?", false, 25u, 25u},
 		{"method=key-type=abcdef==?*", false, 25u, SIZE_MAX},
-		{NULL}
+		{NULL, false, 0u, 0u}
 	}},
-	{NULL}
+	{NULL, {}}
 };

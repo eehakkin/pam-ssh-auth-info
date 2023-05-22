@@ -1,6 +1,7 @@
 pam-ssh-auth-info (1.8.20230906) unstable; urgency=low
 
   * Fixed and updated documentation.
+  * Avoided some compiler warnings.
 
  -- Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>  Wed, 06 Sep 2023 21:19:19 +0300
 

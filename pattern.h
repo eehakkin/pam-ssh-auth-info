@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+ * Copyright © 2021 - 2023 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -64,7 +64,7 @@ is_character_class(
 		info->begin = pattern + 1;
 		info->negation = false;
 	}
-	info->end = memchr(
+	info->end = (char const *)memchr(
 		info->begin + 1,
 		']',
 		(size_t)(pattern_end - (info->begin + 1))
