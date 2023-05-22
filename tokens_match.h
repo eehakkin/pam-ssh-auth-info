@@ -249,7 +249,14 @@ tokens_match_extended_pattern(
 			 * either the tokens head is not empty or the occurence
 			 * count must be increased.
 			 */
-			if (match_len == info->match_len.max) {
+			if (
+				match_len == info->match_len.max ||
+				is_end_of_token(
+					config,
+					tokens_tail,
+					tokens_end
+					)
+				) {
 				/* Tail call optimization.
 				 */
 				++count;
