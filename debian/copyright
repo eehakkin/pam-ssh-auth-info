@@ -6,7 +6,7 @@ Copyright: 2021 - 2023 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
 License: GPL-3+
 
 Files: pam_*.c *.h
-Copyright: 2021 - 2022 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+Copyright: 2021 - 2023 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
 License: LGPL-3+
 
 License: GPL-3+
