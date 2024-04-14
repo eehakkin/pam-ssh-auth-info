@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+ * Copyright © 2021 - 2024 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -16,6 +16,7 @@
  * <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
@@ -52,6 +53,7 @@ is_character_class(
 	char const *const pattern_end,
 	struct character_class_info *info
 	) {
+	assert(pattern < pattern_end);
 	if (pattern_end - pattern < 3)
 		return false;
 	if (pattern[0] != '[')
@@ -91,6 +93,7 @@ is_extended_pattern(
 	char const *const pattern_end,
 	struct extended_pattern_info *info
 	) {
+	assert(pattern < pattern_end);
 	if (pattern_end - pattern < 3)
 		return false;
 	if (pattern[1] != '(')
@@ -155,6 +158,7 @@ find_in_pattern(
 	char ch,
 	char const *const not_found
 	) {
+	assert(pattern <= pattern_end);
 	for (; pattern < pattern_end; ++pattern) {
 		struct character_class_info character_class;
 		struct extended_pattern_info extended_pattern;
@@ -190,6 +194,7 @@ measure_pattern(
 	size_t *min,
 	size_t *max
 	) {
+	assert(pattern <= pattern_end);
 	*min = *max = 0u;
 	for (; pattern < pattern_end; ++pattern) {
 		struct character_class_info character_class;
