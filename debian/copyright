@@ -11,7 +11,7 @@ Copyright: 2023 - 2024 Jonathan McDowell <noodles@earth.li>
 License: GPL-3+
 
 Files: pam_*.c pam_*.h *_match.h pattern.h
-Copyright: 2021 - 2023 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+Copyright: 2021 - 2024 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
 License: LGPL-3+
 
 License: GPL-3+

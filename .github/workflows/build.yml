@@ -16,7 +16,7 @@ jobs:
     - name: autoreconf
       run: autoreconf --install
     - name: configure
-      run: ./configure CFLAGS='-g -O2 -Wall -Werror -Wextra'
+      run: ./configure CFLAGS='-g -O2 -pedantic -Wall -Werror -Wextra'
     - name: make
       run: make
     - name: make check

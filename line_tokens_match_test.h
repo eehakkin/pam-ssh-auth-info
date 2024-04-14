@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+ * Copyright © 2021 - 2024 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -254,5 +254,7 @@ struct {
 		{"method=key-type=abcdef==?*", false, false, 25u, SIZE_MAX},
 		{NULL, false, false, 0u, 0u}
 	}},
-	{NULL, {}}
+	{NULL, {
+		{NULL, false, false, 0u, 0u}
+	}}
 };

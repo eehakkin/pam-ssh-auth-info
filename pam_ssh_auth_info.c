@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+ * Copyright © 2021 - 2024 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -18,6 +18,10 @@
 
 #ifdef HAVE_CONFIG_H
 #	include "config.h"
+#endif
+
+#if !defined(HAVE_PAM_SYSLOG) && defined(HAVE_VSYSLOG) && !defined(_DEFAULT_SOURCE)
+#	define _DEFAULT_SOURCE
 #endif
 
 #undef  NDEBUG
