@@ -1,0 +1,101 @@
+#! /usr/bin/awk -Wexec
+# Copyright © 2024 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+function shift() {
+	s = ARGV[1]
+	for ( i = 2 ; i < ARGC ; ++i )
+		ARGV[i-1] = ARGV[i]
+	delete ARGV[--ARGC]
+	return s
+}
+
+function usage(status, out_file) {
+	print "Usage: ./tokens_match_fuzzer_input [<OPTION>] <OUT-DIR> line_tokens_match_test.h" >> out_file
+	print " or:   ./tokens_match_fuzzer_input [<OPTION>] <OUT-DIR> < line_tokens_match_test.h" >> out_file
+	print "" >> out_file
+	print "Options:" >> out_file
+	print "  -h, --help  Show this help message and exit." >> out_file
+	print "" >> out_file
+	print "Files:" >> out_file
+	print "  line_tokens_match_test.h          A header file containing test cases" >> out_file
+	print "                                    to be used as an input." >> out_file
+	print "  <OUT-DIR>/<LINE-NUBMER>-<FLAGS>   A fuzzer test case to be generated." >> out_file
+	return status
+}
+
+BEGIN {
+	if (ARGC > 1 && ARGV[1] ~ /^(--help|-h)$/)
+		exit(usage(0, "/dev/stdout"))
+	if (ARGC > 1 && ARGV[1] == "--")
+		shift() # --
+	if (ARGC > 1)
+		out_dir = shift()
+	else
+		exit(usage(1, "/dev/stderr"))
+}
+
+# From
+#     struct {
+#         char const *lines;
+#         struct {
+#             char const *pattern;
+#             /* ... */
+#         } pattern_data[/*...*/];
+#     } test_data[] = {
+# to
+#     };
+/^[}] test_data[[][]] = [{]\r?$/,/^[}];\r?$/ {
+	gsub(/[?][?]"\/[*] no trigraphs [*]\/"/, "??")
+
+	#	{"lines", {
+	if (match($0, /^\t[{]"[^"]*", [{]/)) {
+		lines = lines0 = substr( $0, RSTART + 3, RLENGTH - 3 - 4 )
+		gsub( /\\n/, "\n", lines )
+		gsub( /\\\\/, "\\", lines )
+	}
+
+	#		{"pattern", /*...*/},
+	if (match($0, /^\t\t[{]"[^"]*",/)) {
+		pattern = pattern0 = substr( $0, RSTART + 4, RLENGTH - 4 - 2 )
+		gsub( /\\\\/, "\\", pattern )
+		pattern_separator_len = token_separator_len = 1
+		for ( flags = 0; flags <= 1 ; ++flags ) {
+			out_file = out_dir"/"NR"-"flags
+			printf \
+				"Creating %s with content \"\\%o\\%o\\%o%s\\0%s\\0\" ...\n", \
+				out_file, \
+				flags, \
+				pattern_separator_len, \
+				token_separator_len, \
+				lines0, \
+				pattern0 \
+				>> "/dev/stderr"
+			printf \
+				"%c%c%c%s\0%s\0", \
+				flags, \
+				pattern_separator_len, \
+				token_separator_len, \
+				lines, \
+				pattern \
+				> out_file
+			close( out_file )
+		}
+	}
+
+	if (/^[}];\r?$/) {
+		print "Done." >> "/dev/stderr"
+	}
+}

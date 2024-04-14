@@ -4,6 +4,7 @@
 *.m4
 *.o
 *.trs
+*_fuzzer
 *_test
 .deps/
 .libs/
