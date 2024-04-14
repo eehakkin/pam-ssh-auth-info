@@ -14,6 +14,7 @@ auto*
 compile
 config.*
 configure
+contrib/*.spec
 depcomp
 install-sh
 libtool

@@ -14,8 +14,14 @@ The following packages are required in order to build and install this
 module:
 
 * PAM development files (libpam-dev, pam-devel or such)
-* Automake (automake)
 * Autoconf (autoconf)
+* Automake (automake)
+* C development files and tools (build-essential, Development tools or such)
+  consisting at least of:
+  * C compiler (such as gcc)
+  * C development files (libc6-dev, glibc-devel or such)
+  * GNU Libtool (libtool)
+  * Make (make)
 
 The following packages are required in order to make use of this module:
 

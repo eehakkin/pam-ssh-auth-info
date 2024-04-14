@@ -1,0 +1,49 @@
+# Copyright © 2023 - 2024 Jonathan McDowell <noodles@earth.li>
+# Copyright © 2023 - 2024 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+
+Name:		pam-ssh-auth-info
+Version:	@VERSION@
+Release:	1%{?dist}
+Summary:	PAM SSH Authentication Information Module
+# GPL-3.0-or-later: *
+# LGPL-3.0-or-later: pam_*.c pam_*.h *_match.h pattern.h
+License:	GPL-3.0-or-later AND LGPL-3.0-or-later
+URL:		https://github.eero.häkkinen.fi/%{name}/
+Source0:	https://github.com/eehakkin/%{name}/archive/refs/tags/%{version}.tar.gz#/%{name}-%{version}.tar.gz
+BuildRequires:	autoconf
+BuildRequires:	automake
+BuildRequires:	gcc
+BuildRequires:	libtool
+BuildRequires:	make
+BuildRequires:	pam-devel
+Requires:	pam%{?_isa}
+
+%description
+The pam_ssh_auth_info.so PAM module is designed to succeed or fail
+authentication based on SSH authentication information consisting of
+a list of successfully completed authentication methods and public
+credentials (e.g. keys) used to authenticate the user.
+One use is to select whether to load other modules based on this test.
+
+%prep
+%autosetup
+
+%build
+autoreconf --install
+%configure
+%make_build
+
+%check
+make check
+
+%install
+%make_install
+
+%files
+%doc README.md
+%license COPYING
+%license COPYING.LESSER
+%{_libdir}/security/pam_ssh_auth_info.so
+%{_mandir}/man8/pam_ssh_auth_info.8*
+
+%changelog

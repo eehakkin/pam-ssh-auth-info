@@ -1,5 +1,5 @@
 ACLOCAL_AMFLAGS			= -I m4
-EXTRA_DIST			= README.md debian
+EXTRA_DIST			= README.md contrib debian
 LIBS				=
 
 TESTS				= $(check_PROGRAMS)
