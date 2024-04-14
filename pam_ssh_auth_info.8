@@ -1,24 +1,23 @@
-\" Copyright © 2021 - 2023 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
-\"
-\" This manual page is free software: you can redistribute it and/or modify
-\" it under the terms of the GNU General Public License as published by
-\" the Free Software Foundation, either version 3 of the License, or
-\" (at your option) any later version.
-\"
-\" This manual page is distributed in the hope that it will be useful,
-\" but WITHOUT ANY WARRANTY; without even the implied warranty of
-\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-\" GNU General Public License for more details.
-\"
-\" You should have received a copy of the GNU General Public License
-\" along with this manual page.  If not, see <http://www.gnu.org/licenses/>.
+.\" Copyright © 2021 - 2024 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+.\"
+.\" This manual page is free software: you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation, either version 3 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This manual page is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this manual page.  If not, see <http://www.gnu.org/licenses/>.
 .if '\*[.T]'html' \{\
 .HEAD "<link href=""groff.css"" rel=""stylesheet"" type=""text/css"" />"
 .HEAD "<meta name=""viewport"" content=""width=device-width, initial-scale=1.0"" />"
 .HX 0
 .\}
-
-.TH "pam_ssh_auth_info" "8" "2022-01-16"
+.TH "pam_ssh_auth_info" "8" "2024-04-01"
 
 .SH "NAME"
 pam_ssh_auth_info \- test SSH authentication information
@@ -287,8 +286,16 @@ successfully completed authentication methods and
 public credentials (e.g. keys)
 used to authenticate the user.
 This environment variable
-is visible to PAM modules but not to user sessions and
-is provided by OpenSSH server since version 7.8p1.
+is provided by OpenSSH server since version 7.6p1 and
+is visible
+to PAM auth modules
+(beginning with OpenSSH version 7.8p1
+if keyboard-interactive challenge-response authentication is used and
+beginning with OpenSSH version 9.8p1
+if password authentication is used) and
+to PAM account, session and password modules
+(beginning with OpenSSH version 7.6p1)
+but not to user sessions.
 .TP
 .B SSH_USER_AUTH
 A location of a file
@@ -299,13 +306,25 @@ successfully completed authentication methods and
 public credentials (e.g. keys)
 used to authenticate the user.
 This environment variable
-is visible to user sessions but not to PAM modules and
-is provided by OpenSSH server since version 7.8p1
-if the \fBExposeAuthInfo\fR server option is enabled.
+is provided by OpenSSH server since version 7.6p1
+if the \fBExposeAuthInfo\fR server option is enabled and
+is visible
+to user sessions
+but not to PAM modules.
 This may be a useful source
 for creating proper patterns.
 
 .SH "NOTES"
+SSH authentication information is available
+to PAM auth modules
+beginning with OpenSSH version 7.8p1
+if keyboard-interactive challenge-response authentication is used and
+beginning with OpenSSH version 9.8p1
+if password authentication is used.
+SSH authentication information is available
+to PAM account, session and password modules
+beginning with OpenSSH version 7.6p1.
+.PP
 In order to make this module useful,
 the following \fBsshd_config\fR(5) options should be set
 (either explicitly or via defaults):
@@ -362,9 +381,17 @@ Home Page for pam_ssh_auth_info
 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
 
 .SH "COPYRIGHT"
-Copyright © 2021 - 2022 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+Copyright © 2021 - 2024 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
 
 This manual page is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
+
+This manual page is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this manual page.  If not, see <http://www.gnu.org/licenses/>.
