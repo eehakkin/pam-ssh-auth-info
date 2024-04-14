@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+ * Copyright © 2021 - 2024 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -16,6 +16,7 @@
  * <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -70,6 +71,8 @@ line_tokens_match(
 		allow_prefix_match,
 		{{1, "="}, {1, " "}}
 	};
+	assert(line <= line_end);
+	assert(pattern <= pattern_end);
 	return tokens_match(
 		&config,
 		line,
