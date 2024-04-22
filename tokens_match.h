@@ -116,6 +116,33 @@ tokens_match(
 	);
 
 static bool
+character_byte_matches_character_byte_class(
+	struct character_byte_class_info const *const info,
+	char const ch
+	) {
+	for (char const *p = info->begin;;) {
+		if (p[1] == '-' && p[2] != ']') {
+			/* A character byte range.
+			 */
+			if (p[0] <= ch && ch <= p[2])
+				return !info->negation;
+			p += 3;
+		}
+		else {
+			/* A character byte.
+			 */
+			if (ch == p[0])
+				return !info->negation;
+			++p;
+		}
+		if (p >= info->end) {
+			assert(p == info->end);
+			return info->negation;
+		}
+	}
+}
+
+static bool
 token_match_pattern_list(
 	char const *const token,
 	char const *const token_end,
@@ -392,32 +419,10 @@ tokens_match(
 			 */
 			if (is_end_of_token(config, tokens, tokens_end))
 				return false;
-			pattern = character_byte_class.begin;
-			do {
-				if (pattern[1] == '-' && pattern[2] != ']') {
-					/* A character byte range.
-					 */
-					if (
-						*tokens >= pattern[0] &&
-						*tokens <= pattern[2]
-						)
-						break;
-					pattern += 3;
-				}
-				else {
-					/* A character byte.
-					 */
-					if (*tokens == pattern[0])
-						break;
-					++pattern;
-				}
-			} while (pattern < character_byte_class.end);
-			assert(pattern <= character_byte_class.end);
-			if (
-				character_byte_class.negation
-					? pattern < character_byte_class.end
-					: pattern >= character_byte_class.end
-				)
+			if (!character_byte_matches_character_byte_class(
+				&character_byte_class,
+				*tokens
+				))
 				return false;
 			pattern = character_byte_class.end;
 			++tokens;
