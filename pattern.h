@@ -50,17 +50,17 @@ measure_pattern(
 	struct pattern_length_info *const match_len
 	);
 
-struct character_class_info {
+struct character_byte_class_info {
 	char const *begin;
 	char const *end;
 	bool negation;
 };
 
 static bool
-is_character_class(
+is_character_byte_class(
 	char const *const pattern,
 	char const *const pattern_end,
-	struct character_class_info *info
+	struct character_byte_class_info *const info
 	) {
 	assert(pattern < pattern_end);
 	if (pattern_end - pattern < 3)
@@ -179,7 +179,7 @@ find_in_pattern(
 	) {
 	assert(pattern <= pattern_end);
 	for (; pattern < pattern_end; ++pattern) {
-		struct character_class_info character_class;
+		struct character_byte_class_info character_byte_class;
 		struct extended_pattern_info extended_pattern;
 		bool const measure_extended_patterns_off = false;
 		if (*pattern == ch)
@@ -194,12 +194,12 @@ find_in_pattern(
 			measure_extended_patterns_off
 			))
 			pattern = extended_pattern.end;
-		else if (is_character_class(
+		else if (is_character_byte_class(
 			pattern,
 			pattern_end,
-			&character_class
+			&character_byte_class
 			))
-			pattern = character_class.end;
+			pattern = character_byte_class.end;
 		else if (*pattern == '\\') {
 			if (pattern_end - pattern >= 2)
 				++pattern;
@@ -217,7 +217,7 @@ measure_pattern(
 	assert(pattern <= pattern_end);
 	len->min = len->max = 0u;
 	for (; pattern < pattern_end; ++pattern) {
-		struct character_class_info character_class;
+		struct character_byte_class_info character_byte_class;
 		struct extended_pattern_info extended_pattern;
 		bool const measure_extended_patterns_on = true;
 		if (is_extended_pattern(
@@ -239,12 +239,12 @@ measure_pattern(
 			pattern = extended_pattern.end;
 			continue;
 		}
-		else if (is_character_class(
+		else if (is_character_byte_class(
 			pattern,
 			pattern_end,
-			&character_class
+			&character_byte_class
 			))
-			pattern = character_class.end;
+			pattern = character_byte_class.end;
 		else if (*pattern == '*') {
 			len->max = SIZE_MAX;
 			continue;

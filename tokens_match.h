@@ -297,7 +297,7 @@ tokens_match(
 	unsigned const recursion_limit
 	) {
 	for (; pattern < pattern_end; ++pattern) {
-		struct character_class_info character_class;
+		struct character_byte_class_info character_byte_class;
 		struct extended_pattern_info extended_pattern;
 		bool const measure_extended_patterns_on = true;
 		if (is_extended_pattern(
@@ -374,10 +374,10 @@ tokens_match(
 			++tokens;
 			continue;
 		case '[':
-			if (!is_character_class(
+			if (!is_character_byte_class(
 				pattern,
 				pattern_end,
-				&character_class
+				&character_byte_class
 				))
 				/* An opening bracket ([) without a matching
 				 * closing bracket (]) is not a character byte
@@ -392,7 +392,7 @@ tokens_match(
 			 */
 			if (is_end_of_token(config, tokens, tokens_end))
 				return false;
-			pattern = character_class.begin;
+			pattern = character_byte_class.begin;
 			do {
 				if (pattern[1] == '-' && pattern[2] != ']') {
 					/* A character byte range.
@@ -411,15 +411,15 @@ tokens_match(
 						break;
 					++pattern;
 				}
-			} while (pattern < character_class.end);
-			assert(pattern <= character_class.end);
+			} while (pattern < character_byte_class.end);
+			assert(pattern <= character_byte_class.end);
 			if (
-				character_class.negation
-					? pattern < character_class.end
-					: pattern >= character_class.end
+				character_byte_class.negation
+					? pattern < character_byte_class.end
+					: pattern >= character_byte_class.end
 				)
 				return false;
-			pattern = character_class.end;
+			pattern = character_byte_class.end;
 			++tokens;
 			continue;
 		case '\\':
