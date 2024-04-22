@@ -25,6 +25,11 @@
 #	define SIZE_MAX (~(size_t)0)
 #endif
 
+struct pattern_count_info {
+	unsigned min;
+	unsigned max;
+};
+
 static char const *
 find_in_pattern(
 	char const *pattern,
@@ -77,10 +82,7 @@ is_character_class(
 struct extended_pattern_info {
 	char const *begin;
 	char const *end;
-	struct {
-		unsigned min;
-		unsigned max;
-	} count;
+	struct pattern_count_info count;
 	struct {
 		size_t min;
 		size_t max;
