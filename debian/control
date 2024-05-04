@@ -23,3 +23,16 @@ Description: SSH authentication information PAM module
  authentication methods and public credentials (e.g. keys) used to
  authenticate the user.
  One use is to select whether to load other modules based on this test.
+
+Package: pam-ssh-auth-info-build-dependencies
+Architecture: any
+Build-Profiles: <pkg.pam-ssh-auth-info.build-dependencies>
+Depends:
+	${misc:Depends},
+	debhelper-compat (= 13),
+	libpam-dev
+Provides: build-dependencies
+Section: metapackages
+Description: build dependencies for SSH authentication information PAM module
+ This metapackage depends on build dependencies needed to build an SSH
+ authentication information PAM module.
