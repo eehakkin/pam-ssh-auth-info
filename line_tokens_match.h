@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+ * Copyright © 2021 - 2025 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -32,7 +32,7 @@
  *
  *  *  Matches any number of (including zero) token character bytes but not
  *     a token separator (space).
- *  =  Matches equal-sign (=) or a token separator (space).
+ *  =  Matches an equal-sign (=) or a token separator (space).
  *  ?  Matches any token character byte but not a token separator (space).
  *  [  A pair of brackets introduces a character byte class.
  *     A character byte class ([...]) matches any token character byte in
@@ -45,18 +45,20 @@
  * The extended patterns:
  *
  *  ?(pattern|pattern|...)  Matches zero or one occurence of the given
- *                          patterns.
+ *                          patterns within a token.
  *                          Does not match a token separator (space).
  *  *(pattern|pattern|...)  Matches zero or more occurences of the given
- *                          patterns.
+ *                          patterns within a token.
+ *                          Does not match a token separator (space).
+ *  @(pattern|pattern|...)  Matches one occurence of the given patterns
+ *                          within a token.
  *                          Does not match a token separator (space).
  *  +(pattern|pattern|...)  Matches one or more occurences of the given
- *                          patterns.
+ *                          patterns within a token.
  *                          Does not match a token separator (space).
- *  @(pattern|pattern|...)  Matches one of the given patterns.
+ *  !(pattern|pattern|...)  Matches anything within a token except one
+ *                          occurence of the given patterns.
  *                          Does not match a token separator (space).
- *  !(pattern|pattern|...)  Matches anything except one of the given
- *                          patterns or a token separator (space).
  */
 static bool
 line_tokens_match(

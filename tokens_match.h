@@ -77,18 +77,19 @@ tokens_match_partially(
  * The extended patterns:
  *
  *  ?(pattern|pattern|...)  Matches zero or one occurence of the given
- *                          patterns.
+ *                          patterns within a token.
  *                          Does not match a token separator.
  *  *(pattern|pattern|...)  Matches zero or more occurences of the given
- *                          patterns.
+ *                          patterns within a token.
+ *                          Does not match a token separator.
+ *  @(pattern|pattern|...)  Matches one occurence of the given patterns
+ *                          within a token.
  *                          Does not match a token separator.
  *  +(pattern|pattern|...)  Matches one or more occurences of the given
- *                          patterns.
+ *                          patterns within a token.
  *                          Does not match a token separator.
- *  @(pattern|pattern|...)  Matches one of the given patterns.
- *                          Does not match a token separator.
- *  !(pattern|pattern|...)  Matches anything except one occurence of the given
- *                          patterns.
+ *  !(pattern|pattern|...)  Matches anything within a token except one
+ *                          occurence of the given patterns.
  *                          Does not match a token separator.
  */
 static bool

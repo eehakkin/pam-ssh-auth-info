@@ -153,23 +153,23 @@ Preserves the literal meaning of the following character byte.
 The extended patterns have the following meanings:
 .TP
 .BI "?(" pattern "|" pattern "|" \fR... ")"
-Matches zero or one occurence of the given patterns.
+Matches zero or one occurence of the given patterns within a word.
 Does not match a word separator (space).
 .TP
 .BI "*(" pattern "|" pattern "|" \fR... ")"
-Matches zero or more occurences of the given patterns.
-Does not match a word separator (space).
-.TP
-.BI "+(" pattern "|" pattern "|" \fR... ")"
-Matches one or more occurences of the given patterns.
+Matches zero or more occurences of the given patterns within a word.
 Does not match a word separator (space).
 .TP
 .BI "@(" pattern "|" pattern "|" \fR... ")"
-Matches one occurence of the given patterns.
+Matches one occurence of the given patterns within a word.
+Does not match a word separator (space).
+.TP
+.BI "+(" pattern "|" pattern "|" \fR... ")"
+Matches one or more occurences of the given patterns within a word.
 Does not match a word separator (space).
 .TP
 .BI "!(" pattern "|" pattern "|" \fR... ")"
-Matches anything except one occurence of the given patterns.
+Matches anything within a word except one occurence of the given patterns.
 Does not match a word separator (space).
 
 .PP

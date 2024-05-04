@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+ * Copyright © 2021 - 2025 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -129,12 +129,12 @@ parse_extended_pattern(
 		info->count.min = 0u;
 		info->count.max = ~0u;
 		break;
+	case '@':  /* one occurence */
+		info->count.min = info->count.max = 1u;
+		break;
 	case '+':  /* one or more occurences */
 		info->count.min = 1u;
 		info->count.max = ~0u;
-		break;
-	case '@':  /* one occurence */
-		info->count.min = info->count.max = 1u;
 		break;
 	case '!':  /* anything except one occurence */
 		info->count.min = info->count.max = 0u;
