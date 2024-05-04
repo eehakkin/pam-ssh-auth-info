@@ -1,4 +1,4 @@
-.\" Copyright © 2021 - 2024 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+.\" Copyright © 2021 - 2025 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
 .\"
 .\" This manual page is free software: you can redistribute it and/or modify
 .\" it under the terms of the GNU General Public License as published by
@@ -15,9 +15,24 @@
 .if '\*[.T]'html' \{\
 .HEAD "<link href=""groff.css"" rel=""stylesheet"" type=""text/css"" />"
 .HEAD "<meta name=""viewport"" content=""width=device-width, initial-scale=1.0"" />"
-.HX 0
 .\}
-.TH "pam_ssh_auth_info" "8" "2024-04-01"
+.TH "pam_ssh_auth_info" "8" "2025-04-21"
+.if '\*[.T]'html' .if d HTML-NS \{\
+.\" Work-around bug #61915: grohtml: .EX/.EE is not monospaced
+.\"             https://savannah.gnu.org/bugs/?61915
+.rn EX EX0
+.de EX
+.	EX0
+.	ft C
+.	HTML <!--
+.	HTML-NS -->
+..
+.rn EE EE0
+.de EE
+.	ft
+.	EE0
+..
+.\}
 
 .SH "NAME"
 pam_ssh_auth_info \- test SSH authentication information
@@ -25,7 +40,7 @@ pam_ssh_auth_info \- test SSH authentication information
 .SH "SYNOPSIS"
 .B  pam_ssh_auth_info.so
 .RI [ flag ...]
-.RI [ pattern [= pattern ]...]
+.RI [ pattern [= pattern ]...]...
 
 .SH "DESCRIPTION"
 The pam_ssh_auth_info.so PAM module is designed
@@ -46,39 +61,38 @@ If there are no previous successfully completed authentication methods,
 SSH authentication information
 is not available but missing and
 authentication will neither succeed nor fail
-(the module will return \fBPAM_IGNORE\fR).
+(the module will return \fBPAM_IGNORE\fP).
 
 .SH "OPTIONS"
-.PP
-The following \fIflag\fRs are supported:
+The following \fIflag\fPs are supported:
 .TP
 .B all_of
-All of the \fIpattern\fRs must match.
-If zero \fIpattern\fRs are given as module arguments,
+All of the \fIpattern\fPs must match.
+If zero \fIpattern\fPs are given as module arguments,
 authentication will succeed
 if SSH authentication information is available.
 This is the default.
 .TP
 .B any_of
-At least one of the \fIpattern\fRs must match.
-If zero \fIpattern\fRs are given as module arguments,
+At least one of the \fIpattern\fPs must match.
+If zero \fIpattern\fPs are given as module arguments,
 authentication will fail
 if SSH authentication information is available.
 .TP
 .B debug
 Log debugging messages to syslog.
 .TP
-.IR \fBdisable = service [: service [...]]
+.BI disable= service \fR[\fP: service \fR[...]]
 Disable pattern matching for the services
 listed in the colon separator service list.
 .TP
-.IR \fBenable = service [: service [...]]
+.BI enable= service \fR[\fP: service \fR[...]]
 Enable pattern matching only for the services
 listed in the colon separator service list.
 .TP
 .B none_of
-None of the \fIpattern\fRs may match.
-If zero \fIpattern\fRs are given as module arguments,
+None of the \fIpattern\fPs may match.
+If zero \fIpattern\fPs are given as module arguments,
 authentication will succeed
 if SSH authentication information is available.
 .TP
@@ -91,18 +105,18 @@ Do not log failure messages to syslog.
 .B quiet_success
 Do not log success messages to syslog.
 .TP
-.IR \fBrecursion_limit = limit
+.BI recursion_limit= limit
 Change the recursion limit.
-This affects extended patterns and \fB*\fR wildcard patterns.
+This affects extended patterns and \fB*\fP wildcard patterns.
 
 .SS "PATTERNS"
-.PP
 Any character byte that appears in a pattern,
 other than
 the extended patterns and
 the special pattern characters
 described below,
 matches itself.
+
 .PP
 The special pattern characters have the following meanings:
 .TP
@@ -111,8 +125,7 @@ Matches any number of (including zero) word character bytes
 but not a word separator (space).
 .TP
 .B =
-Matches equal-sign (\fB=\fR) or a word separator (space).
-.IP
+Matches an equal-sign (\fB=\fP) or a word separator (space).
 This
 enables more natural looking patterns and
 allows patterns to be written without spaces
@@ -124,17 +137,18 @@ but not a word separator (space).
 .TP
 .B [
 A pair of brackets introduces a character byte class.
-A character byte class (\fB[\fR...\fB]\fR)
+A character byte class (\fB[\fP...\fB]\fP)
 matches any word character byte in the class.
-A complemented character byte class (\fB[!\fR...\fB]\fR)
+A complemented character byte class (\fB[!\fP...\fB]\fP)
 matches any word character byte not in the class.
 Neither matches a word separator (space).
 A class may contain
-character bytes (\fB[abcde]\fR) and
-character byte ranges (\fB[a-e]\fR).
+character bytes (\fB[abcde]\fP) and
+character byte ranges (\fB[a-e]\fP).
 .TP
 .B \\\\
 Preserves the literal meaning of the following character byte.
+
 .PP
 The extended patterns have the following meanings:
 .TP
@@ -151,28 +165,29 @@ Matches one or more occurences of the given patterns.
 Does not match a word separator (space).
 .TP
 .BI "@(" pattern "|" pattern "|" \fR... ")"
-Matches one of the given patterns.
+Matches one occurence of the given patterns.
 Does not match a word separator (space).
 .TP
 .BI "!(" pattern "|" pattern "|" \fR... ")"
 Matches anything except one occurence of the given patterns.
 Does not match a word separator (space).
+
 .PP
 SSH authentication information consists of lines having a format like
 .IP
-.IR method "[/" submethod "] [" key-type " " key-data "] [" info-word "]..."
+.\" method [\fB/ submethod "][ " auth-method-key       "][ " auth-method-info ]
+.IR method [\fB/ submethod "][ " key-type " " key-data "][ " info-word     ]...
 .PP
 SSH authentication information matches a pattern
 if on any such line all the words or the initial words
 match the pattern.
 
-.SH "MODULE SERVICES PROVIDED"
-.PP
+.SH "MODULE TYPES PROVIDED"
 All module types
-(\fBaccount\fR, \fBauth\fR, \fBpassword\fR and \fBsession\fR)
+(\fBaccount\fP, \fBauth\fP, \fBpassword\fP and \fBsession\fP)
 are provided.
-That said,
-the \fBauth\fR type is still undoubtedly the most useful one.
+That being said,
+the \fBauth\fP type is still undoubtedly the most useful one.
 
 .SH "RETURN VALUES"
 .TP
@@ -180,25 +195,26 @@ the \fBauth\fR type is still undoubtedly the most useful one.
 Pattern requirements are not met.
 SSH authentication information
 does not match all of or any of the patterns
-(see the \fBall_of\fR and the \fBany_of\fR options) or
+(see the \fBall_of\fP and the \fBany_of\fP options) or
 matches some of the patterns
-(see the \fBnone_of\fR option).
+(see the \fBnone_of\fP option).
 .TP
 .B PAM_IGNORE
 The pattern matching is
-disabled for the service (see the \fBdisable\fR option) or
-not enabled for the service (see the \fBenable\fR option) or
+disabled for the service (see the \fBdisable\fP option) or
+not enabled for the service (see the \fBenable\fP option) or
 SSH authentication information is missing.
 .TP
 .B PAM_SUCCESS
 Pattern requirements are met.
 SSH authentication information
 matches all of or any of the patterns
-(see the \fBall_of\fR and the \fBany_of\fR options) or
+(see the \fBall_of\fP and the \fBany_of\fP options) or
 matches none of the patterns
-(see the \fBnone_of\fR option).
+(see the \fBnone_of\fP option).
 
 .SH EXAMPLES
+
 .PP
 Always load an OATH module rule
 (to request and check a one-time password)
@@ -212,9 +228,10 @@ no previous successfully completed authentications
 .EX
 auth  requisite         oath-module.so option...
 auth  [success=1        \\
-       default=ignore]  pam_ssh_auth_info.so
+       default=ignore]  pam_ssh_auth_info.so
 auth  required          password-module.so try_first_pass option...
 .EE
+
 .PP
 Load an OATH module rule
 (to request and check a one-time password)
@@ -231,13 +248,14 @@ but always load a password module rule
 .IP
 .EX
 auth  [success=1        \\
-       ignore=ignore    \\
-       auth_err=ignore  \\
-       default=die]     pam_ssh_auth_info.so quiet \\
-                            publickey=*sk-*@openssh.com
+       ignore=ignore    \\
+       auth_err=ignore  \\
+       default=die]     pam_ssh_auth_info.so quiet \\
+                            publickey=*sk-*@openssh.com
 auth  requisite         oath-module.so option...
 auth  required          password-module.so try_first_pass option...
 .EE
+
 .PP
 Require that there is
 at least one previous successfully completed
@@ -252,8 +270,9 @@ only one of them is required to be a FIDO authenticator algorithm based one.
 .IP
 .EX
 auth  requisite  pam_ssh_auth_info.so quiet \\
-                     publickey=*sk-*@openssh.com
+                     publickey=*sk-*@openssh.com
 .EE
+
 .PP
 Require that there is
 at least one previous successfully completed
@@ -273,8 +292,8 @@ does not end with \(lq@openssh.com\(rq).
 .IP
 .EX
 auth  requisite  pam_ssh_auth_info.so quiet \\
-                     publickey=*sk-*@openssh.com \\
-                     publickey=!(*sk-*@openssh.com)
+                     publickey=*sk-*@openssh.com \\
+                     publickey=!(*sk-*@openssh.com)
 .EE
 
 .SH "ENVIRONMENT"
@@ -307,7 +326,7 @@ public credentials (e.g. keys)
 used to authenticate the user.
 This environment variable
 is provided by OpenSSH server since version 7.6p1
-if the \fBExposeAuthInfo\fR server option is enabled and
+if the \fBExposeAuthInfo\fP server option is enabled and
 is visible
 to user sessions
 but not to PAM modules.
@@ -326,15 +345,15 @@ to PAM account, session and password modules
 beginning with OpenSSH version 7.6p1.
 .PP
 In order to make this module useful,
-the following \fBsshd_config\fR(5) options should be set
+the following \fBsshd_config\fP(5) options should be set
 (either explicitly or via defaults):
 .TP
-.BR AuthenticationMethods
+.BR \%AuthenticationMethods
 Should contain comma-separated lists of authentication method names
 with
-\fBkeyboard-interactive\fR,
-\fBkeyboard-interactive:pam\fR or
-\fBpassword\fR
+\fBkeyboard-interactive\fP,
+\fBkeyboard-interactive:pam\fP or
+\fBpassword\fP
 as the last list items
 so that there are
 successfully completed authentication methods and
@@ -342,46 +361,51 @@ public credentials (e.g. keys)
 during the PAM authentication.
 For example
 .RS
-.RS
+.IP
 .EX
-.B "AuthenticationMethods publickey,keyboard-interactive"
+.BR AuthenticationMethods " " publickey,keyboard-interactive
 .EE
-.RE
+.PP
 for
 mandatory public key authentication and
 mandatory PAM authentication
 using keyboard-interactive challenge-response authentication or
-.RS
+.IP
 .EX
-.B "AuthenticationMethods publickey,keyboard-interactive keyboard-interactive"
+.BR AuthenticationMethods " " publickey,keyboard-interactive " " keyboard-interactive
 .EE
-.RE
+.PP
 for
 optional public key authentication and
 mandatory PAM authentication
 using keyboard-interactive challenge-response authentication.
 .RE
 .TP
-.BR ChallengeResponseAuthentication ", " KbdInteractiveAuthentication ", " PasswordAuthentication ", etc."
-The relevant ones should be set to \fByes\fR.
+.BR \%ChallengeResponseAuthentication ", " \%KbdInteractiveAuthentication ", " \%PasswordAuthentication ", etc."
+The relevant ones should be set to \fByes\fP.
 .TP
-.BR UsePAM
-Should be set to \fByes\fR.
+.BR \%UsePAM
+Should be set to \fByes\fP.
 
 .SH "SEE ALSO"
-.BR pam (7),
-.BR sshd_config (5)
+.BR \%pam (7),
+.BR \%sshd_config (5)
 
 .na
 .UR https://github.Eero.xn--Hkkinen-5wa.fi/pam-ssh-auth-info/
-Home Page for pam_ssh_auth_info
+Home page for pam_ssh_auth_info
 .UE
+.ad
 
 .SH "AUTHOR"
+.na
 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+.ad
 
 .SH "COPYRIGHT"
-Copyright © 2021 - 2024 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+.na
+Copyright © 2021 - 2025 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+.ad
 
 This manual page is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
