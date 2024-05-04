@@ -7,7 +7,7 @@ Maintainer: Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>
 Priority: optional
 Rules-Requires-Root: no
 Section: admin
-Standards-Version: 4.5.1
+Standards-Version: 4.6.2
 Vcs-Browser: https://github.com/eehakkin/pam-ssh-auth-info
 Vcs-Git: https://github.com/eehakkin/pam-ssh-auth-info.git
 

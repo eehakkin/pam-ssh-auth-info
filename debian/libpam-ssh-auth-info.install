@@ -1,0 +1,2 @@
+lib/${DEB_HOST_MULTIARCH}/security/*.so*
+usr/share/man/man8/*.8*
