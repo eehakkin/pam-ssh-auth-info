@@ -1,4 +1,4 @@
-pam-ssh-auth-info (2.0.~~yyyymmdd) UNRELEASED; urgency=low
+pam-ssh-auth-info (2.0.20250421) unstable; urgency=low
 
   * Avoided unneeded measurements of extended patterns.
   * Measured !(...) extended patterns.
@@ -12,6 +12,7 @@ pam-ssh-auth-info (2.0.~~yyyymmdd) UNRELEASED; urgency=low
   * Clarified documentation of extended patterns.
   * Added debian/*.install and debian/not-install files.
   * Declared an optional build-dependency metapackage.
+  * Dropped all/any options (in favour of all_of/any_of options).
 
  -- Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>  Mon, 21 Apr 2025 18:44:59 +0300
 
