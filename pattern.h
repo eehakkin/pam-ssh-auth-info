@@ -88,6 +88,7 @@ struct extended_pattern_info {
 	char const *end;
 	struct pattern_count_info count;
 	struct pattern_length_info match_len;
+	struct pattern_length_info total_len;
 };
 
 static bool
@@ -147,6 +148,23 @@ is_extended_pattern(
 			if (pattern2_end == info->end)
 				break;
 			pattern2 = pattern2_end + 1;
+		}
+		if (info->count.max == 0u) {  /* !(...) */
+			info->total_len.min =
+				info->match_len.min == 0u ? 1u : 0u;
+			info->total_len.max = SIZE_MAX;
+		}
+		else {
+			info->total_len.min =
+				info->count.min * info->match_len.min;
+			/* Ditto for the maximum,
+			 * but do not let it overflow.
+			 */
+			if (info->match_len.max <= SIZE_MAX / info->count.max)
+				info->total_len.max =
+					info->count.max * info->match_len.max;
+			else
+				info->total_len.max = SIZE_MAX;
 		}
 	}
 	return true;
@@ -208,30 +226,16 @@ measure_pattern(
 			&extended_pattern,
 			measure_extended_patterns_on
 			)) {
-			if (extended_pattern.count.max == 0) {
-				/* !(...) */
-				if (extended_pattern.match_len.min == 0)
-					++len->min;
+			len->min += extended_pattern.total_len.min;
+			/* Ditto for the maximum,
+			 * but do not let it overflow.
+			 */
+			if (len->max <= (
+				SIZE_MAX - extended_pattern.total_len.max
+				))
+				len->max += extended_pattern.total_len.max;
+			else
 				len->max = SIZE_MAX;
-			}
-			else {
-				len->min +=
-					extended_pattern.count.min *
-					extended_pattern.match_len.min;
-				/* Ditto for the maximum,
-				 * but do not let it overflow.
-				 */
-				if (
-					extended_pattern.match_len.max <=
-					(SIZE_MAX - len->max) /
-					extended_pattern.count.max
-					)
-					len->max +=
-						extended_pattern.count.max *
-						extended_pattern.match_len.max;
-				else
-					len->max = SIZE_MAX;
-			}
 			pattern = extended_pattern.end;
 			continue;
 		}
