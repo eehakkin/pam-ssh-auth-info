@@ -94,7 +94,8 @@ static bool
 is_extended_pattern(
 	char const *const pattern,
 	char const *const pattern_end,
-	struct extended_pattern_info *info
+	struct extended_pattern_info *const info,
+	bool const measure
 	) {
 	assert(pattern < pattern_end);
 	if (pattern_end - pattern < 3)
@@ -127,13 +128,10 @@ is_extended_pattern(
 	info->end = find_in_pattern(info->begin, pattern_end, ')', NULL);
 	if (!info->end)
 		return false;
-	info->match_len.min = SIZE_MAX;
-	info->match_len.max = 0u;
-	/* A match length is not meaningful for !(...).
-	 */
-	if (info->count.max != 0) { /* Not !(...) */
-		char const *pattern2 = info->begin;
-		for (;;) {
+	if (measure) {
+		info->match_len.min = SIZE_MAX;
+		info->match_len.max = 0u;
+		for (char const *pattern2 = info->begin;;) {
 			struct pattern_length_info match_len;
 			char const *const pattern2_end = find_in_pattern(
 				pattern2,
@@ -165,6 +163,7 @@ find_in_pattern(
 	for (; pattern < pattern_end; ++pattern) {
 		struct character_class_info character_class;
 		struct extended_pattern_info extended_pattern;
+		bool const measure_extended_patterns_off = false;
 		if (*pattern == ch)
 			return pattern;
 		/* Skip extended patterns, character classes and backslash
@@ -173,7 +172,8 @@ find_in_pattern(
 		if (is_extended_pattern(
 			pattern,
 			pattern_end,
-			&extended_pattern
+			&extended_pattern,
+			measure_extended_patterns_off
 			))
 			pattern = extended_pattern.end;
 		else if (is_character_class(
@@ -201,14 +201,19 @@ measure_pattern(
 	for (; pattern < pattern_end; ++pattern) {
 		struct character_class_info character_class;
 		struct extended_pattern_info extended_pattern;
+		bool const measure_extended_patterns_on = true;
 		if (is_extended_pattern(
 			pattern,
 			pattern_end,
-			&extended_pattern
+			&extended_pattern,
+			measure_extended_patterns_on
 			)) {
-			if (extended_pattern.count.max == 0)
+			if (extended_pattern.count.max == 0) {
 				/* !(...) */
+				if (extended_pattern.match_len.min == 0)
+					++len->min;
 				len->max = SIZE_MAX;
+			}
 			else {
 				len->min +=
 					extended_pattern.count.min *

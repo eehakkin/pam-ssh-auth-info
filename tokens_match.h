@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+ * Copyright © 2021 - 2024 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -299,10 +299,12 @@ tokens_match(
 	for (; pattern < pattern_end; ++pattern) {
 		struct character_class_info character_class;
 		struct extended_pattern_info extended_pattern;
+		bool const measure_extended_patterns_on = true;
 		if (is_extended_pattern(
 			pattern,
 			pattern_end,
-			&extended_pattern
+			&extended_pattern,
+			measure_extended_patterns_on
 			)) {
 			if (!recursion_limit)
 				return false;

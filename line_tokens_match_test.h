@@ -44,7 +44,7 @@ struct {
 		{"[[]*(|a)*(|b)*(|c)*(|d)*()[]]", false, true, {2u, MAX(4u * (size_t)UINT_MAX + 2u, UINT_MAX)}},
 		{"[[]@(a)@(bb)@(ccc)@()[]]", false, true, {8u, 8u}},
 		{"[[]+(|a)+(|b)+(|c)+(|d)+()[]]", false, true, {2u, MAX(4u * (size_t)UINT_MAX + 2u, UINT_MAX)}},
-		{"[[]!(|*b*|*c*)!(|*a*|*c*)!(|*a*|*b*)[]]", false, true, {2u, SIZE_MAX}},
+		{"[[]!(|*b*|*c*)!(|*a*|*c*)!(|*a*|*b*)[]]", false, true, {5u, SIZE_MAX}},
 		{"[[][-a-z][-a-z-][-a-z-][a-z-][a-z-][a-z-][]]", false, true, {8u, 8u}},
 		{"[[][!b-z][!ac-z][!ac-z][!abd-z][!abd-z][!abd-z][]]", false, true, {8u, 8u}},
 		{"[![]abbccc[]]", false, false, {8u, 8u}},
@@ -55,7 +55,7 @@ struct {
 		{"[[]?(a)?(b)?(ccc)[]]", false, false, {2u, 7u}},
 		{"[[]@(a)@(b)@(ccc)[]]", false, false, {7u, 7u}},
 		{"[[]+(|a)+(|b)+(|c)+(d)[]]", false, false, {3u, MAX(4u * (size_t)UINT_MAX + 2u, UINT_MAX)}},
-		{"[[]!(|*b*|*c*)!(|*b*)!(|*a*|*b*)[]]", false, false, {2u, SIZE_MAX}},
+		{"[[]!(|*b*|*c*)!(|*b*)!(|*a*|*b*)[]]", false, false, {5u, SIZE_MAX}},
 		{NULL, false, false, {0u, 0u}}
 	}},
 	{"\\", {
