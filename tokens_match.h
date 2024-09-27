@@ -166,6 +166,135 @@ find_end_of_token(
 	return end->tokens_max;
 }
 
+/* 1) Find the tail.
+ * In addition, while doing that,
+ * 2) Process consecutive initial wildcard patterns.
+ */
+static bool
+find_tokens_pattern_tail(
+	struct tokens_match_config const *const config,
+	struct tokens_pattern *const current,
+	struct tokens_pattern_end *const tail,
+	struct tokens_pattern_end const *const end,
+	char const *const token_end,
+	struct extended_pattern_info *const extended_pattern,
+	struct wildcard_pattern_info *const wildcard_pattern
+	) {
+	assert(current->tokens <= token_end && token_end <= end->tokens_max);
+	assert(current->pattern <= end->pattern);
+	assert(end->tokens_min <= end->tokens_max);
+	tail->tokens_min = current->tokens;
+	tail->pattern = current->pattern;
+	if (extended_pattern) {
+		if ((size_t)(
+			token_end - tail->tokens_min
+			) < extended_pattern->total_len.min)
+			return false;
+		tail->tokens_min += extended_pattern->total_len.min;
+		if (
+			extended_pattern->total_len.min ==
+			extended_pattern->total_len.max
+			) {
+			/* The end of a fixed length extended pattern is
+			 * a pattern tail.
+			 */
+			tail->tokens_max = tail->tokens_min;
+			return true;
+		}
+	}
+	bool has_complex_patterns = !!extended_pattern;
+	while (tail->pattern < end->pattern) {
+		char character_byte;
+		struct character_byte_class_info character_byte_class;
+		struct extended_pattern_info extended_pattern2;
+		struct wildcard_pattern_info wildcard_pattern2;
+		bool const measure_extended_patterns_on = true;
+		char const *const original_tail_pattern = tail->pattern;
+		switch (parse_next_pattern_entity(
+			&tail->pattern,
+			end->pattern,
+			token_end < end->tokens_max
+				? &config->separators.pattern
+				: NULL,
+			&config->separators.token,
+			&character_byte,
+			&character_byte_class,
+			&extended_pattern2,
+			&wildcard_pattern2,
+			measure_extended_patterns_on
+			)) {
+		case EXTENDED_PATTERN:
+			if ((size_t)(
+				token_end - tail->tokens_min
+				) < extended_pattern2.total_len.min)
+				return false;
+			tail->tokens_min += extended_pattern2.total_len.min;
+			if (
+				extended_pattern2.total_len.min !=
+				extended_pattern2.total_len.max
+				)
+				has_complex_patterns = true;
+			continue;
+		case WILDCARD_PATTERN_MATCH_ANY:
+			if (wildcard_pattern && (
+				current->pattern == original_tail_pattern
+				))
+				/* More consecutive initial wildcard patterns.
+				 */
+				current->pattern = tail->pattern;
+			else if (!has_complex_patterns) {
+				/* The beginning of the next wildcard pattern
+				 * is a pattern tail.
+				 */
+				tail->tokens_max = token_end;
+				tail->pattern = original_tail_pattern;
+				return true;
+			}
+			continue;
+		case WILDCARD_PATTERN_MATCH_ONE:
+			if (wildcard_pattern && (
+				current->pattern == original_tail_pattern
+				))
+				/* More consecutive initial wildcard patterns.
+				 */
+				current->pattern = tail->pattern;
+			break;
+		case CHARACTER_BYTE_CLASS_PATTERN:
+		case CHARACTER_BYTE_PATTERN:
+			break;
+		case PATTERN_SEPARATOR_PATTERN:
+			if (memchr(
+				tail->tokens_min,
+				character_byte,
+				(size_t)(token_end - tail->tokens_min)
+				)) {
+				/* Too complex pattern.
+				 * The pattern separator can match either
+				 * itself or a token separator.
+				 */
+				*tail = *end;
+				return true;
+			}
+			/* FALLTHROUGH */
+		case TOKEN_SEPARATOR_PATTERN:
+			if (token_end >= end->tokens_max)
+				/* There are no more tokens.
+				 */
+				return false;
+			tail->tokens_min = token_end;
+			tail->tokens_max = token_end;
+			tail->pattern = original_tail_pattern;
+			return true;
+		}
+		if (tail->tokens_min >= token_end)
+			return false;
+		assert(tail->tokens_min < end->tokens_max);
+		++tail->tokens_min;
+	}
+	*tail = *end;
+	return true;
+}
+
 static char const *
 token_matches_pattern_list_partially(
 	struct extended_pattern_info const *const info,
@@ -459,6 +588,7 @@ tokens_match_partially(
 		struct extended_pattern_info extended_pattern;
 		struct wildcard_pattern_info wildcard_pattern;
 		bool const measure_extended_patterns_on = true;
+		struct tokens_pattern_end tail;
 		if (token_end < current.tokens)
 			token_end = find_end_of_token(config, &current, end);
 		switch (parse_next_pattern_entity(
@@ -475,29 +605,56 @@ tokens_match_partially(
 		case EXTENDED_PATTERN:
 			if (!recursion_limit)
 				return false;
-			return tokens_match_extended_pattern_partially(
+			if (!find_tokens_pattern_tail(
+				config,
+				&current,
+				&tail,
+				end,
+				token_end,
+				&extended_pattern,
+				NULL
+				))
+				return false;
+			if (!tokens_match_extended_pattern_partially(
 				config,
 				&extended_pattern,
 				&current,
-				current_out,
-				end,
-				token_end,
+				&current,
+				&tail,
+				token_end <= tail.tokens_max
+					? token_end
+					: tail.tokens_max,
 				recursion_limit - 1,
 				0
-				);
+				))
+				return false;
+			continue;
 		case WILDCARD_PATTERN_MATCH_ANY:
 			/* An asterisk (*) matches any number of (including
 			 * zero) token character bytes but not a token
 			 * separator.
 			 */
-			return tokens_match_wildcard_pattern_partially(
+			if (!find_tokens_pattern_tail(
 				config,
 				&current,
-				current_out,
+				&tail,
 				end,
 				token_end,
+				NULL,
+				&wildcard_pattern
+				))
+				return false;
+			assert(token_end <= tail.tokens_max);
+			if (!tokens_match_wildcard_pattern_partially(
+				config,
+				&current,
+				&current,
+				&tail,
+				token_end,
 				recursion_limit
-				);
+				))
+				return false;
+			continue;
 		case WILDCARD_PATTERN_MATCH_ONE:
 			/* A question mark (?) matches any token character byte
 			 * but not a token separator.
