@@ -47,6 +47,7 @@ tokens_match_partially(
 	struct tokens_pattern const *const begin,
 	struct tokens_pattern *const current_out,
 	struct tokens_pattern_end const *const end,
+	char const *token_end,
 	unsigned const recursion_limit
 	);
 
@@ -111,6 +112,7 @@ tokens_match(
 		&begin,
 		NULL,
 		&end,
+		NULL,
 		recursion_limit
 		);
 }
@@ -164,14 +166,6 @@ find_end_of_token(
 	return end->tokens_max;
 }
 
-static bool
-is_token_separator(
-	struct tokens_match_config const *const config,
-	char const ch
-	) {
-	return in_character_byte_set(&config->separators.token, ch);
-}
-
 static char const *
 token_matches_pattern_list_partially(
 	struct extended_pattern_info const *const info,
@@ -210,6 +204,7 @@ token_matches_pattern_list_partially(
 			&current,
 			&current,
 			&end,
+			token_end_max,
 			recursion_limit
 			))
 			return current.tokens;
@@ -226,10 +221,10 @@ tokens_match_extended_pattern_partially(
 	struct tokens_pattern const *const begin,
 	struct tokens_pattern *const current_out,
 	struct tokens_pattern_end const *const end,
+	char const *const token_end,
 	unsigned const recursion_limit,
 	unsigned count
 	) {
-	char const *const token_end = find_end_of_token(config, begin, end);
 	assert(begin->tokens <= token_end && token_end <= end->tokens_max);
 	assert(begin->pattern <= end->pattern);
 	assert(end->tokens_min <= end->tokens_max);
@@ -252,6 +247,7 @@ tokens_match_extended_pattern_partially(
 				&tail,
 				current_out,
 				end,
+				token_end,
 				recursion_limit
 				))
 				/* There are enough occurences (or there could
@@ -298,6 +294,7 @@ tokens_match_extended_pattern_partially(
 						&tail,
 						current_out,
 						end,
+						token_end,
 						recursion_limit
 						)
 					)
@@ -373,6 +370,7 @@ tokens_match_extended_pattern_partially(
 						&tail,
 						current_out,
 						end,
+						token_end,
 						recursion_limit - 1,
 						count + 1
 						)
@@ -396,9 +394,9 @@ tokens_match_wildcard_pattern_partially(
 	struct tokens_pattern const *const begin,
 	struct tokens_pattern *const current_out,
 	struct tokens_pattern_end const *const end,
+	char const *const token_end,
 	unsigned const recursion_limit
 	) {
-	char const *const token_end = find_end_of_token(config, begin, end);
 	assert(begin->tokens <= token_end && token_end <= end->tokens_max);
 	assert(begin->pattern <= end->pattern);
 	assert(end->tokens_min <= end->tokens_max);
@@ -431,6 +429,7 @@ tokens_match_wildcard_pattern_partially(
 			&current,
 			current_out,
 			end,
+			token_end,
 			recursion_limit - 1
 			))
 			return true;
@@ -445,19 +444,23 @@ tokens_match_partially(
 	struct tokens_pattern const *const begin,
 	struct tokens_pattern *const current_out,
 	struct tokens_pattern_end const *const end,
+	char const *token_end,
 	unsigned const recursion_limit
 	) {
-	assert(begin->tokens <= end->tokens_max);
+	if (token_end == NULL)
+		token_end = find_end_of_token(config, begin, end);
+	assert(begin->tokens <= token_end && token_end <= end->tokens_max);
 	assert(begin->pattern <= end->pattern);
 	assert(end->tokens_min <= end->tokens_max);
 	struct tokens_pattern current = *begin;
 	while (current.pattern < end->pattern) {
-		assert(current.tokens <= end->tokens_max);
 		char character_byte;
 		struct character_byte_class_info character_byte_class;
 		struct extended_pattern_info extended_pattern;
 		struct wildcard_pattern_info wildcard_pattern;
 		bool const measure_extended_patterns_on = true;
+		if (token_end < current.tokens)
+			token_end = find_end_of_token(config, &current, end);
 		switch (parse_next_pattern_entity(
 			&current.pattern,
 			end->pattern,
@@ -478,6 +481,7 @@ tokens_match_partially(
 				&current,
 				current_out,
 				end,
+				token_end,
 				recursion_limit - 1,
 				0
 				);
@@ -491,13 +495,14 @@ tokens_match_partially(
 				&current,
 				current_out,
 				end,
+				token_end,
 				recursion_limit
 				);
 		case WILDCARD_PATTERN_MATCH_ONE:
 			/* A question mark (?) matches any token character byte
 			 * but not a token separator.
 			 */
-			if (current.tokens >= end->tokens_max)
+			if (current.tokens >= token_end)
 				return false;
 			break;
 		case CHARACTER_BYTE_CLASS_PATTERN:
@@ -507,7 +512,7 @@ tokens_match_partially(
 			 * any token character byte not in the class.
 			 * Neither matches a token separator.
 			 */
-			if (current.tokens >= end->tokens_max)
+			if (current.tokens >= token_end)
 				return false;
 			if (!character_byte_matches_character_byte_class(
 				&character_byte_class,
@@ -516,7 +521,7 @@ tokens_match_partially(
 				return false;
 			break;
 		case CHARACTER_BYTE_PATTERN:
-			if (current.tokens >= end->tokens_max)
+			if (current.tokens >= token_end)
 				return false;
 			if (*current.tokens != character_byte)
 				return false;
@@ -530,14 +535,13 @@ tokens_match_partially(
 				return false;
 			if (
 				*current.tokens != character_byte &&
-				!is_token_separator(config, *current.tokens)
+				current.tokens != token_end
 				)
 				return false;
 			++current.tokens;
 			continue;
 		}
-		if (is_token_separator(config, *current.tokens))
-			return false;
+		assert(current.tokens < end->tokens_max);
 		++current.tokens;
 	}
 	/* The end of the pattern.
@@ -546,7 +550,7 @@ tokens_match_partially(
 	if (current.tokens < end->tokens_min) {
 		if (!config->allow_prefix_match)
 			return false;
-		if (!is_token_separator(config, *current.tokens))
+		if (current.tokens != token_end)
 			return false;
 		current.tokens = end->tokens_min;
 	}
