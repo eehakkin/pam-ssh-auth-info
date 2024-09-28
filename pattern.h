@@ -30,6 +30,11 @@ struct pattern_count_info {
 	unsigned max;
 };
 
+struct pattern_length_info {
+	size_t min;
+	size_t max;
+};
+
 static char const *
 find_in_pattern(
 	char const *pattern,
@@ -42,8 +47,7 @@ static void
 measure_pattern(
 	char const *pattern,
 	char const *const pattern_end,
-	size_t *min,
-	size_t *max
+	struct pattern_length_info *const match_len
 	);
 
 struct character_class_info {
@@ -83,10 +87,7 @@ struct extended_pattern_info {
 	char const *begin;
 	char const *end;
 	struct pattern_count_info count;
-	struct {
-		size_t min;
-		size_t max;
-	} match_len;
+	struct pattern_length_info match_len;
 };
 
 static bool
@@ -133,18 +134,18 @@ is_extended_pattern(
 	if (info->count.max != 0) { /* Not !(...) */
 		char const *pattern2 = info->begin;
 		for (;;) {
-			size_t min, max;
-			char const *pattern2_end = find_in_pattern(
+			struct pattern_length_info match_len;
+			char const *const pattern2_end = find_in_pattern(
 				pattern2,
 				info->end,
 				'|',
 				info->end
 				);
-			measure_pattern(pattern2, pattern2_end, &min, &max);
-			if (info->match_len.min > min)
-				info->match_len.min = min;
-			if (info->match_len.max < max)
-				info->match_len.max = max;
+			measure_pattern(pattern2, pattern2_end, &match_len);
+			if (info->match_len.min > match_len.min)
+				info->match_len.min = match_len.min;
+			if (info->match_len.max < match_len.max)
+				info->match_len.max = match_len.max;
 			if (pattern2_end == info->end)
 				break;
 			pattern2 = pattern2_end + 1;
@@ -193,11 +194,10 @@ static void
 measure_pattern(
 	char const *pattern,
 	char const *const pattern_end,
-	size_t *min,
-	size_t *max
+	struct pattern_length_info *const len
 	) {
 	assert(pattern <= pattern_end);
-	*min = *max = 0u;
+	len->min = len->max = 0u;
 	for (; pattern < pattern_end; ++pattern) {
 		struct character_class_info character_class;
 		struct extended_pattern_info extended_pattern;
@@ -208,9 +208,9 @@ measure_pattern(
 			)) {
 			if (extended_pattern.count.max == 0)
 				/* !(...) */
-				*max = SIZE_MAX;
+				len->max = SIZE_MAX;
 			else {
-				*min +=
+				len->min +=
 					extended_pattern.count.min *
 					extended_pattern.match_len.min;
 				/* Ditto for the maximum,
@@ -218,14 +218,14 @@ measure_pattern(
 				 */
 				if (
 					extended_pattern.match_len.max <=
-					(SIZE_MAX - *max) /
+					(SIZE_MAX - len->max) /
 					extended_pattern.count.max
 					)
-					*max +=
+					len->max +=
 						extended_pattern.count.max *
 						extended_pattern.match_len.max;
 				else
-					*max = SIZE_MAX;
+					len->max = SIZE_MAX;
 			}
 			pattern = extended_pattern.end;
 			continue;
@@ -237,18 +237,18 @@ measure_pattern(
 			))
 			pattern = character_class.end;
 		else if (*pattern == '*') {
-			*max = SIZE_MAX;
+			len->max = SIZE_MAX;
 			continue;
 		}
 		else if (*pattern == '\\') {
 			if (pattern_end - pattern >= 2)
 				++pattern;
 		}
-		++*min;
+		++len->min;
 		/* Ditto for the maximum,
 		 * but do not let it overflow.
 		 */
-		if (*max != SIZE_MAX)
-			++*max;
+		if (len->max != SIZE_MAX)
+			++len->max;
 	}
 }

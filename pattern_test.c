@@ -20,8 +20,9 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "line_tokens_match_test.h"
 #include "pattern.h"
+
+#include "line_tokens_match_test.h"
 
 char const *
 size2str(size_t const size, char *buf, size_t n) {
@@ -48,10 +49,10 @@ size2str(size_t const size, char *buf, size_t n) {
 	return buf;
 }
 
-#define SIZE2STR(size_var) size2str( \
-	size_var, \
-	size_var##_buf, \
-	sizeof size_var##_buf / sizeof *size_var##_buf \
+#define SIZE2STR(size, buf) size2str( \
+	size, \
+	buf, \
+	sizeof buf / sizeof *buf \
 	)
 
 int
@@ -60,36 +61,47 @@ main() {
 		for (int j = 0; test_data[i].pattern_data[j].pattern; ++j) {
 			char const *const pattern =
 				test_data[i].pattern_data[j].pattern;
-			size_t const expected_min =
-				test_data[i].pattern_data[j].expected_min;
-			size_t const expected_max =
-				test_data[i].pattern_data[j].expected_max;
-			char expected_max_buf[256];
-			size_t actual_min, actual_max;
-			char actual_max_buf[256];
+			struct pattern_length_info const
+				*const expected_match_len = &(
+					test_data[i]
+					.pattern_data[j]
+					.expected_match_len
+					);
+			char expected_match_len_max_buf[256];
+			struct pattern_length_info actual_match_len;
+			char actual_match_len_max_buf[256];
 			measure_pattern(
 				pattern,
 				pattern + strlen(pattern),
-				&actual_min,
-				&actual_max
+				&actual_match_len
 				);
 			fprintf(
 				stderr,
-				"measure_pattern(\"%s\", \"\", &min, &max)"
-				", min == %zu %s %zu"
-				", max == %s %s %s"
+				"measure_pattern(\"%s\", \"\", &match_len)"
+				", match_len.min == %zu %s %zu"
+				", match_len.max == %s %s %s"
 				"\n",
 				pattern,
-				actual_min,
-				actual_min == expected_min ? "==" : "!=",
-				expected_min,
-				SIZE2STR(actual_max),
-				actual_max == expected_max ? "==" : "!=",
-				SIZE2STR(expected_max)
+				actual_match_len.min,
+				actual_match_len.min == expected_match_len->min
+					? "=="
+					: "!=",
+				expected_match_len->min,
+				SIZE2STR(
+					actual_match_len.max,
+					actual_match_len_max_buf
+					),
+				actual_match_len.max == expected_match_len->max
+					? "=="
+					: "!=",
+				SIZE2STR(
+					expected_match_len->max,
+					expected_match_len_max_buf
+					)
 				);
-			if (actual_min != expected_min)
+			if (actual_match_len.min != expected_match_len->min)
 				return 1;
-			if (actual_max != expected_max)
+			if (actual_match_len.max != expected_match_len->max)
 				return 1;
 		}
 	}
