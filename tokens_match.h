@@ -25,55 +25,19 @@
 struct tokens_match_config {
 	bool allow_prefix_match;
 	struct {
-		struct tokens_match_config_set {
-			size_t len;
-			char const *ptr;
-		} pattern_separator, token_separator;
-	} sets;
+		struct character_byte_set pattern;
+		struct character_byte_set token;
+	} separators;
 };
-
-static bool
-in_tokens_match_config_set(
-	struct tokens_match_config_set const *const set,
-	char const ch
-	) {
-	return memchr(set->ptr, ch, set->len) != NULL;
-}
-
-static bool
-is_pattern_separator(
-	struct tokens_match_config const *const config,
-	char const ch
-	) {
-	return in_tokens_match_config_set(&config->sets.pattern_separator, ch);
-}
-
-static bool
-is_token_separator(
-	struct tokens_match_config const *const config,
-	char const ch
-	) {
-	return in_tokens_match_config_set(&config->sets.token_separator, ch);
-}
-
-static bool
-is_end_of_token(
-	struct tokens_match_config const *const config,
-	char const *const tokens,
-	char const *const tokens_end
-	) {
-	assert(tokens <= tokens_end);
-	return tokens >= tokens_end || is_token_separator(config, *tokens);
-}
 
 /* Check if the tokens match the pattern.
  *
  * Any character byte that appears in a pattern, other than the extended
- * patterns and the special pattern characters described below and the pattern
- * separator characters, matches itself.
+ * patterns and the special pattern characters described below and
+ * the separator characters, matches itself.
  *
- * The pattern separator character bytes match themselves and token
- * separator character bytes.
+ * The separator character bytes match themselves and token separator character
+ * bytes.
  *
  * The special pattern characters:
  *
@@ -140,6 +104,24 @@ character_byte_matches_character_byte_class(
 			return info->negation;
 		}
 	}
+}
+
+static bool
+is_token_separator(
+	struct tokens_match_config const *const config,
+	char const ch
+	) {
+	return in_character_byte_set(&config->separators.token, ch);
+}
+
+static bool
+is_end_of_token(
+	struct tokens_match_config const *const config,
+	char const *const tokens,
+	char const *const tokens_end
+	) {
+	assert(tokens <= tokens_end);
+	return tokens >= tokens_end || is_token_separator(config, *tokens);
 }
 
 static bool
@@ -323,19 +305,25 @@ tokens_match(
 	char const *const pattern_end,
 	unsigned const recursion_limit
 	) {
-	for (; pattern < pattern_end; ++pattern) {
+	while (pattern < pattern_end) {
+		assert(tokens <= tokens_end);
+		char character_byte;
 		struct character_byte_class_info character_byte_class;
 		struct extended_pattern_info extended_pattern;
 		bool const measure_extended_patterns_on = true;
-		if (is_extended_pattern(
-			pattern,
+		switch (parse_next_pattern_entity(
+			&pattern,
 			pattern_end,
+			&config->separators.pattern,
+			&config->separators.token,
+			&character_byte,
+			&character_byte_class,
 			&extended_pattern,
 			measure_extended_patterns_on
 			)) {
+		case EXTENDED_PATTERN:
 			if (!recursion_limit)
 				return false;
-			pattern = extended_pattern.end + 1;
 			return tokens_match_extended_pattern(
 				config,
 				tokens,
@@ -346,11 +334,10 @@ tokens_match(
 				recursion_limit - 1,
 				0
 				);
-		}
-		switch (pattern[0]) {
-		case '*':
-			/* An asterisk matches any number of (including zero)
-			 * token character bytes but not a token separator.
+		case WILDCARD_PATTERN_MATCH_ANY:
+			/* An asterisk (*) matches any number of (including
+			 * zero) token character bytes but not a token
+			 * separator.
 			 */
 			while (pattern < pattern_end && pattern[0] == '*')
 				++pattern;
@@ -392,69 +379,51 @@ tokens_match(
 					return false;
 			}
 			assert(false);
-		case '?':
-			/* A question mark matches any token character byte but
-			 * not a token separator.
+		case WILDCARD_PATTERN_MATCH_ONE:
+			/* A question mark (?) matches any token character byte
+			 * but not a token separator.
 			 */
-			if (is_end_of_token(config, tokens, tokens_end))
+			if (tokens >= tokens_end)
 				return false;
-			++tokens;
-			continue;
-		case '[':
-			if (!is_character_byte_class(
-				pattern,
-				pattern_end,
-				&character_byte_class
-				))
-				/* An opening bracket ([) without a matching
-				 * closing bracket (]) is not a character byte
-				 * class.
-				 */
-				break;
+			break;
+		case CHARACTER_BYTE_CLASS_PATTERN:
 			/* A character byte class ([...]) matches any token
 			 * character byte in the class.
 			 * A complemented character byte class ([!...]) matches
 			 * any token character byte not in the class.
 			 * Neither matches a token separator.
 			 */
-			if (is_end_of_token(config, tokens, tokens_end))
+			if (tokens >= tokens_end)
 				return false;
 			if (!character_byte_matches_character_byte_class(
 				&character_byte_class,
 				*tokens
 				))
 				return false;
-			pattern = character_byte_class.end;
+			break;
+		case CHARACTER_BYTE_PATTERN:
+			if (tokens >= tokens_end)
+				return false;
+			if (*tokens != character_byte)
+				return false;
+			break;
+		case PATTERN_SEPARATOR_PATTERN:
+		case TOKEN_SEPARATOR_PATTERN:
+			/* A separator character byte matches itself or
+			 * a token separator character byte.
+			 */
+			if (tokens >= tokens_end)
+				return false;
+			if (
+				*tokens != character_byte &&
+				!is_token_separator(config, *tokens)
+				)
+				return false;
 			++tokens;
 			continue;
-		case '\\':
-			/* A backslash preserves the literal meaning of
-			 * the following character byte.
-			 */
-			if (pattern_end - pattern >= 2)
-				++pattern;
-			break;
-		default:
-			if (is_pattern_separator(config, pattern[0])) {
-				/* A pattern separator character byte matches
-				 * itself or a token separator character byte.
-				 */
-				assert(tokens <= tokens_end);
-				if (tokens >= tokens_end)
-					return false;
-				if (!(
-					*tokens == pattern[0] ||
-					is_token_separator(config, *tokens)
-					))
-					return false;
-				++tokens;
-				continue;
-			}
 		}
-		assert(tokens <= tokens_end);
-		if (tokens >= tokens_end)
-			return false;
-		if (*tokens != pattern[0])
+		assert(tokens < tokens_end);
+		if (is_token_separator(config, *tokens))
 			return false;
 		++tokens;
 	}

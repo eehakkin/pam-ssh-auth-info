@@ -39,7 +39,7 @@ static char const *
 find_in_pattern(
 	char const *pattern,
 	char const *const pattern_end,
-	char ch,
+	char const ch,
 	char const *const not_found
 	);
 
@@ -81,6 +81,19 @@ is_character_byte_class(
 		(size_t)(pattern_end - (info->begin + 1))
 		);
 	return info->end != NULL;
+}
+
+struct character_byte_set {
+	size_t len;
+	char const *ptr;
+};
+
+static bool
+in_character_byte_set(
+	struct character_byte_set const *const set,
+	char const ch
+	) {
+	return memchr(set->ptr, ch, set->len) != NULL;
 }
 
 struct extended_pattern_info {
@@ -170,40 +183,127 @@ is_extended_pattern(
 	return true;
 }
 
+enum pattern_type {
+	EXTENDED_PATTERN,
+	PATTERN_SEPARATOR_PATTERN,
+	TOKEN_SEPARATOR_PATTERN,
+	CHARACTER_BYTE_PATTERN,
+	CHARACTER_BYTE_CLASS_PATTERN = '[',
+	WILDCARD_PATTERN_MATCH_ANY = '*',
+	WILDCARD_PATTERN_MATCH_ONE = '?',
+};
+
+static enum pattern_type
+parse_next_pattern_entity(
+	char const **const pattern_ptr,
+	char const *const pattern_end,
+	struct character_byte_set const *const pattern_separators,
+	struct character_byte_set const *const token_separators,
+	char *const character_byte,
+	struct character_byte_class_info *const character_byte_class,
+	struct extended_pattern_info *const extended_pattern,
+	bool const measure_extended_patterns
+	) {
+	switch (**pattern_ptr) {
+	case '?':
+		if (extended_pattern && is_extended_pattern(
+			*pattern_ptr,
+			pattern_end,
+			extended_pattern,
+			measure_extended_patterns
+			)) {
+			*pattern_ptr = extended_pattern->end + 1;
+			return EXTENDED_PATTERN;
+		}
+		++*pattern_ptr;
+		return WILDCARD_PATTERN_MATCH_ONE;
+	case '*':
+		if (extended_pattern && is_extended_pattern(
+			*pattern_ptr,
+			pattern_end,
+			extended_pattern,
+			measure_extended_patterns
+			)) {
+			*pattern_ptr = extended_pattern->end + 1;
+			return EXTENDED_PATTERN;
+		}
+		++*pattern_ptr;
+		return WILDCARD_PATTERN_MATCH_ANY;
+	case '@':
+	case '+':
+	case '!':
+		if (extended_pattern && is_extended_pattern(
+			*pattern_ptr,
+			pattern_end,
+			extended_pattern,
+			measure_extended_patterns
+			)) {
+			*pattern_ptr = extended_pattern->end + 1;
+			return EXTENDED_PATTERN;
+		}
+		break;
+	case '[':
+		if (character_byte_class && is_character_byte_class(
+			*pattern_ptr,
+			pattern_end,
+			character_byte_class
+			)) {
+			*pattern_ptr = character_byte_class->end + 1;
+			return CHARACTER_BYTE_CLASS_PATTERN;
+		}
+		break;
+	case '\\':
+		if (pattern_end - *pattern_ptr >= 2)
+			++*pattern_ptr;
+		break;
+	default:
+		if (pattern_separators && in_character_byte_set(
+			pattern_separators,
+			**pattern_ptr
+			)) {
+			*character_byte = *(*pattern_ptr)++;
+			return PATTERN_SEPARATOR_PATTERN;
+		}
+		if (token_separators && in_character_byte_set(
+			token_separators,
+			**pattern_ptr
+			)) {
+			*character_byte = *(*pattern_ptr)++;
+			return TOKEN_SEPARATOR_PATTERN;
+		}
+	}
+	*character_byte = *(*pattern_ptr)++;
+	return CHARACTER_BYTE_PATTERN;
+}
+
 static char const *
 find_in_pattern(
 	char const *pattern,
 	char const *const pattern_end,
-	char ch,
+	char const ch,
 	char const *const not_found
 	) {
 	assert(pattern <= pattern_end);
-	for (; pattern < pattern_end; ++pattern) {
+	while (pattern < pattern_end) {
+		char character_byte;
 		struct character_byte_class_info character_byte_class;
 		struct extended_pattern_info extended_pattern;
 		bool const measure_extended_patterns_off = false;
 		if (*pattern == ch)
 			return pattern;
-		/* Skip extended patterns, character classes and backslash
-		 * escaped character bytes.
+		/* Skip an extended pattern, a character byte class,
+		 * a backslash escaped character byte or a character byte.
 		 */
-		if (is_extended_pattern(
-			pattern,
+		parse_next_pattern_entity(
+			&pattern,
 			pattern_end,
+			NULL,
+			NULL,
+			&character_byte,
+			&character_byte_class,
 			&extended_pattern,
 			measure_extended_patterns_off
-			))
-			pattern = extended_pattern.end;
-		else if (is_character_byte_class(
-			pattern,
-			pattern_end,
-			&character_byte_class
-			))
-			pattern = character_byte_class.end;
-		else if (*pattern == '\\') {
-			if (pattern_end - pattern >= 2)
-				++pattern;
-		}
+			);
 	}
 	return not_found;
 }
@@ -216,16 +316,22 @@ measure_pattern(
 	) {
 	assert(pattern <= pattern_end);
 	len->min = len->max = 0u;
-	for (; pattern < pattern_end; ++pattern) {
+	while (pattern < pattern_end) {
+		char character_byte;
 		struct character_byte_class_info character_byte_class;
 		struct extended_pattern_info extended_pattern;
 		bool const measure_extended_patterns_on = true;
-		if (is_extended_pattern(
-			pattern,
+		switch (parse_next_pattern_entity(
+			&pattern,
 			pattern_end,
+			NULL,
+			NULL,
+			&character_byte,
+			&character_byte_class,
 			&extended_pattern,
 			measure_extended_patterns_on
 			)) {
+		case EXTENDED_PATTERN:
 			len->min += extended_pattern.total_len.min;
 			/* Ditto for the maximum,
 			 * but do not let it overflow.
@@ -236,22 +342,17 @@ measure_pattern(
 				len->max += extended_pattern.total_len.max;
 			else
 				len->max = SIZE_MAX;
-			pattern = extended_pattern.end;
 			continue;
-		}
-		else if (is_character_byte_class(
-			pattern,
-			pattern_end,
-			&character_byte_class
-			))
-			pattern = character_byte_class.end;
-		else if (*pattern == '*') {
+		case WILDCARD_PATTERN_MATCH_ANY:
 			len->max = SIZE_MAX;
 			continue;
-		}
-		else if (*pattern == '\\') {
-			if (pattern_end - pattern >= 2)
-				++pattern;
+		case WILDCARD_PATTERN_MATCH_ONE:
+		case CHARACTER_BYTE_CLASS_PATTERN:
+		case CHARACTER_BYTE_PATTERN:
+			break;
+		case PATTERN_SEPARATOR_PATTERN:
+		case TOKEN_SEPARATOR_PATTERN:
+			assert(false);
 		}
 		++len->min;
 		/* Ditto for the maximum,
