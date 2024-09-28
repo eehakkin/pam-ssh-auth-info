@@ -2,7 +2,7 @@ Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Source: https://git.dev.Eero.xn--Hkkinen-5wa.fi/users/eero/pam-ssh-auth-info.git
 
 Files: *
-Copyright: 2021 - 2024 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+Copyright: 2021 - 2025 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
 License: GPL-3+
 
 Files: contrib/*.spec*
@@ -11,7 +11,7 @@ Copyright: 2023 - 2024 Jonathan McDowell <noodles@earth.li>
 License: GPL-3+
 
 Files: pam_*.c pam_*.h *_match.h pattern.h
-Copyright: 2021 - 2024 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
+Copyright: 2021 - 2025 Eero Häkkinen <Eero+pam-ssh-auth-info@Häkkinen.fi>
 License: LGPL-3+
 
 License: GPL-3+
