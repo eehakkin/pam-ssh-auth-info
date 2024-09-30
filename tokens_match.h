@@ -310,6 +310,7 @@ tokens_match(
 		char character_byte;
 		struct character_byte_class_info character_byte_class;
 		struct extended_pattern_info extended_pattern;
+		struct wildcard_pattern_info wildcard_pattern;
 		bool const measure_extended_patterns_on = true;
 		switch (parse_next_pattern_entity(
 			&pattern,
@@ -319,6 +320,7 @@ tokens_match(
 			&character_byte,
 			&character_byte_class,
 			&extended_pattern,
+			&wildcard_pattern,
 			measure_extended_patterns_on
 			)) {
 		case EXTENDED_PATTERN:

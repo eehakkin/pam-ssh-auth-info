@@ -105,6 +105,7 @@ struct extended_pattern_info {
 	struct pattern_count_info count;
 	struct pattern_length_info match_len;
 	struct pattern_length_info total_len;
+	char const *next_character_byte;
 };
 
 static bool
@@ -145,6 +146,7 @@ parse_extended_pattern(
 	info->end = find_in_pattern(info->begin, pattern_end, ')', NULL);
 	if (!info->end)
 		return false;
+	info->next_character_byte = NULL;
 	*pattern_ptr = info->end + 1;
 	if (measure) {
 		info->match_len.min = SIZE_MAX;
@@ -187,6 +189,10 @@ parse_extended_pattern(
 	return true;
 }
 
+struct wildcard_pattern_info {
+	char const *next_character_byte;
+};
+
 enum pattern_type {
 	EXTENDED_PATTERN,
 	PATTERN_SEPARATOR_PATTERN,
@@ -206,6 +212,7 @@ parse_next_pattern_entity(
 	char *const character_byte,
 	struct character_byte_class_info *const character_byte_class,
 	struct extended_pattern_info *const extended_pattern,
+	struct wildcard_pattern_info *const wildcard_pattern,
 	bool const measure_extended_patterns
 	) {
 	switch (**pattern_ptr) {
@@ -217,8 +224,12 @@ parse_next_pattern_entity(
 			measure_extended_patterns
 			))
 			return EXTENDED_PATTERN;
-		++*pattern_ptr;
-		return WILDCARD_PATTERN_MATCH_ONE;
+		if (wildcard_pattern) {
+			++*pattern_ptr;
+			wildcard_pattern->next_character_byte = NULL;
+			return WILDCARD_PATTERN_MATCH_ONE;
+		}
+		break;
 	case '*':
 		if (extended_pattern && parse_extended_pattern(
 			pattern_ptr,
@@ -227,8 +238,12 @@ parse_next_pattern_entity(
 			measure_extended_patterns
 			))
 			return EXTENDED_PATTERN;
-		++*pattern_ptr;
-		return WILDCARD_PATTERN_MATCH_ANY;
+		if (wildcard_pattern) {
+			++*pattern_ptr;
+			wildcard_pattern->next_character_byte = NULL;
+			return WILDCARD_PATTERN_MATCH_ANY;
+		}
+		break;
 	case '@':
 	case '+':
 	case '!':
@@ -284,6 +299,7 @@ find_in_pattern(
 		char character_byte;
 		struct character_byte_class_info character_byte_class;
 		struct extended_pattern_info extended_pattern;
+		struct wildcard_pattern_info wildcard_pattern;
 		bool const measure_extended_patterns_off = false;
 		if (*pattern == ch)
 			return pattern;
@@ -298,6 +314,7 @@ find_in_pattern(
 			&character_byte,
 			&character_byte_class,
 			&extended_pattern,
+			&wildcard_pattern,
 			measure_extended_patterns_off
 			);
 	}
@@ -316,6 +333,7 @@ measure_pattern(
 		char character_byte;
 		struct character_byte_class_info character_byte_class;
 		struct extended_pattern_info extended_pattern;
+		struct wildcard_pattern_info wildcard_pattern;
 		bool const measure_extended_patterns_on = true;
 		switch (parse_next_pattern_entity(
 			&pattern,
@@ -325,6 +343,7 @@ measure_pattern(
 			&character_byte,
 			&character_byte_class,
 			&extended_pattern,
+			&wildcard_pattern,
 			measure_extended_patterns_on
 			)) {
 		case EXTENDED_PATTERN:
