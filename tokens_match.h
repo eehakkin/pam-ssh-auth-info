@@ -39,6 +39,7 @@ struct tokens_pattern_end {
 	char const *tokens_min;
 	char const *tokens_max;
 	char const *pattern;
+	char const *next_character_byte;
 };
 
 static bool
@@ -105,7 +106,8 @@ tokens_match(
 	struct tokens_pattern_end const end = {
 		tokens_end,
 		tokens_end,
-		pattern_end
+		pattern_end,
+		NULL
 	};
 	return tokens_match_partially(
 		config,
@@ -169,6 +171,7 @@ find_end_of_token(
 /* 1) Find the tail.
  * In addition, while doing that,
  * 2) Process consecutive initial wildcard patterns.
+ * 3) Try to record the next character byte.
  */
 static bool
 find_tokens_pattern_tail(
@@ -185,6 +188,7 @@ find_tokens_pattern_tail(
 	assert(end->tokens_min <= end->tokens_max);
 	tail->tokens_min = current->tokens;
 	tail->pattern = current->pattern;
+	tail->next_character_byte = NULL;
 	if (extended_pattern) {
 		if ((size_t)(
 			token_end - tail->tokens_min
@@ -260,7 +264,18 @@ find_tokens_pattern_tail(
 				current->pattern = tail->pattern;
 			break;
 		case CHARACTER_BYTE_CLASS_PATTERN:
+			break;
 		case CHARACTER_BYTE_PATTERN:
+			if (current->pattern == original_tail_pattern) {
+				/* Record the next character byte.
+				 */
+				if (extended_pattern)
+					extended_pattern->next_character_byte =
+						tail->pattern - 1;
+				if (wildcard_pattern)
+					wildcard_pattern->next_character_byte =
+						tail->pattern - 1;
+			}
 			break;
 		case PATTERN_SEPARATOR_PATTERN:
 			if (memchr(
@@ -301,6 +316,7 @@ token_matches_pattern_list_partially(
 	char const *const token,
 	char const *const token_end_min,
 	char const *const token_end_max,
+	char const *const next_character_byte,
 	unsigned const recursion_limit
 	) {
 	assert(token <= token_end_min && token_end_min <= token_end_max);
@@ -326,7 +342,8 @@ token_matches_pattern_list_partially(
 				info->end,
 				'|',
 				info->end
-				)
+				),
+			next_character_byte
 		};
 		if (tokens_match_partially(
 			&config,
@@ -358,16 +375,19 @@ tokens_match_extended_pattern_partially(
 	assert(begin->pattern <= end->pattern);
 	assert(end->tokens_min <= end->tokens_max);
 	struct tokens_pattern tail = *begin;
+	size_t const token_tail_len_min = info->next_character_byte ? 1u : 0u;
 	for (;; ++count) {
 		struct pattern_length_info const *const head_len =
 			info->count.max == 0u
 				? &info->total_len
 				: &info->match_len;
 		char const *const head_tokens = tail.tokens;
+		if ((size_t)(token_end - head_tokens) < token_tail_len_min)
+			return false;
 		char const *tail_tokens_max =
 			(size_t)(token_end - head_tokens) > head_len->max
 				? head_tokens + head_len->max
-				: token_end;
+				: token_end - token_tail_len_min;
 		if (info->count.max > 0u && (
 			count >= info->count.min || info->match_len.min == 0u
 			)) {
@@ -396,7 +416,9 @@ tokens_match_extended_pattern_partially(
 				return false;
 			++tail.tokens;
 		}
-		if ((size_t)(token_end - head_tokens) < head_len->min)
+		if ((size_t)(
+			token_end - head_tokens
+			) < head_len->min + token_tail_len_min)
 			return false;
 		if ((size_t)(tail.tokens - head_tokens) < head_len->min)
 			tail.tokens = head_tokens + head_len->min;
@@ -409,6 +431,17 @@ tokens_match_extended_pattern_partially(
 			 *  3) the tokens tail matches the rest of the pattern.
 			 */
 			for (;; ++tail.tokens) {
+				if (info->next_character_byte) {
+					if (!(tail.tokens = memchr(
+						tail.tokens,
+						*info->next_character_byte,
+						(size_t)(
+							tail_tokens_max -
+							tail.tokens
+							) + 1
+						)))
+						return false;
+				}
 				assert(tail.tokens <= tail_tokens_max);
 				if (
 					!token_matches_pattern_list_partially(
@@ -416,6 +449,7 @@ tokens_match_extended_pattern_partially(
 						head_tokens,
 						tail.tokens,
 						tail.tokens,
+						info->next_character_byte,
 						recursion_limit
 						) &&
 					tokens_match_partially(
@@ -440,7 +474,21 @@ tokens_match_extended_pattern_partially(
 		 *  3) the tokens tail matches the extended pattern with
 		 *     an increased occurence count.
 		 */
+		char const *const next_character_byte =
+			count + 1 >= info->count.max
+				? info->next_character_byte
+				: NULL;
 		assert(tail.tokens <= tail_tokens_max);
+		if (next_character_byte) {
+			if (!(tail.tokens = memchr(
+				tail.tokens,
+				*next_character_byte,
+				(size_t)(tail_tokens_max - tail.tokens) + 1
+				)))
+				return false;
+			while (*tail_tokens_max != *next_character_byte)
+				--tail_tokens_max;
+		}
 		char const *const tail_tokens_min = tail.tokens;
 		char const *const tail_tokens_initial =
 			token_matches_pattern_list_partially(
@@ -448,6 +496,7 @@ tokens_match_extended_pattern_partially(
 				head_tokens,
 				tail_tokens_min,
 				tail_tokens_max,
+				next_character_byte,
 				recursion_limit
 				);
 		if (!tail_tokens_initial)
@@ -475,6 +524,17 @@ tokens_match_extended_pattern_partially(
 						break;
 					}
 					++tail_tokens_next;
+					if (next_character_byte) {
+						tail_tokens_next = memchr(
+							tail_tokens_next,
+							*next_character_byte,
+							(size_t)(
+								tail_tokens_max -
+								tail_tokens_next
+								) + 1
+							);
+						assert(tail_tokens_next);
+					}
 				} while (tail_tokens_next == tail_tokens_initial);
 			}
 			if (
@@ -484,6 +544,7 @@ tokens_match_extended_pattern_partially(
 					head_tokens,
 					tail.tokens,
 					tail.tokens,
+					next_character_byte,
 					recursion_limit
 					) == tail.tokens
 				) {
@@ -520,6 +581,7 @@ tokens_match_extended_pattern_partially(
 static bool
 tokens_match_wildcard_pattern_partially(
 	struct tokens_match_config const *const config,
+	struct wildcard_pattern_info const *const info,
 	struct tokens_pattern const *const begin,
 	struct tokens_pattern *const current_out,
 	struct tokens_pattern_end const *const end,
@@ -530,7 +592,7 @@ tokens_match_wildcard_pattern_partially(
 	assert(begin->pattern <= end->pattern);
 	assert(end->tokens_min <= end->tokens_max);
 	struct tokens_pattern current = *begin;
-	if (current.pattern >= end->pattern) {
+	if (current.pattern >= end->pattern && !end->next_character_byte) {
 		assert(current.tokens <= token_end);
 		assert(current.pattern == end->pattern);
 		if (current.tokens < end->tokens_min) {
@@ -552,6 +614,12 @@ tokens_match_wildcard_pattern_partially(
 	if (!recursion_limit)
 		return false;
 	for (;; ++current.tokens) {
+		if (info->next_character_byte && !(current.tokens = memchr(
+			current.tokens,
+			*info->next_character_byte,
+			(size_t)(token_end - current.tokens)
+			)))
+			return false;
 		assert(current.tokens <= token_end);
 		if (tokens_match_partially(
 			config,
@@ -647,6 +715,7 @@ tokens_match_partially(
 			assert(token_end <= tail.tokens_max);
 			if (!tokens_match_wildcard_pattern_partially(
 				config,
+				&wildcard_pattern,
 				&current,
 				&current,
 				&tail,
@@ -704,6 +773,10 @@ tokens_match_partially(
 	/* The end of the pattern.
 	 */
 	assert(current.tokens <= end->tokens_max);
+	if (end->next_character_byte) {
+		if (*current.tokens != *end->next_character_byte)
+			return false;
+	}
 	if (current.tokens < end->tokens_min) {
 		if (!config->allow_prefix_match)
 			return false;

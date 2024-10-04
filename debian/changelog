@@ -6,6 +6,7 @@ pam-ssh-auth-info (2.0.~~yyyymmdd) UNRELEASED; urgency=low
   * Fixed handling of *(...) extended patterns after asterisks.
   * Optimized extended patterns.
   * Reduced recursion.
+  * Improved handling of character bytes after asterisks.
 
  -- Eero Häkkinen <Eero+pam-ssh-auth-info@xn--Hkkinen-5wa.fi>  Mon, 21 Apr 2025 18:44:59 +0300
 
